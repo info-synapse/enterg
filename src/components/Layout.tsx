@@ -149,6 +149,9 @@ export function LeftNav({ sports, competitions }: { sports: Sport[]; competition
 export function BottomNav() {
   const mode = useMode();
   const nav = useNavigate();
+  const { pathname } = useLocation();
+  // "Sports" opens football straight away (like the reference) and stays lit on every sport page and on Sports A–Z.
+  const inSports = pathname === '/sports' || pathname.startsWith('/sport/');
   if (mode === 'casino')
     return (
       <nav className="bottom-nav casino" aria-label="Casino navigation">
@@ -163,7 +166,7 @@ export function BottomNav() {
     <nav className="bottom-nav" aria-label="Sports navigation">
       <NavLink to="/" end><Icon name="home" />Home</NavLink>
       <NavLink to="/live"><Icon name="live" />Live</NavLink>
-      <NavLink to="/sports"><Icon name="sports" />Sports</NavLink>
+      <NavLink to="/sport/football" className={inSports ? 'active' : ''} aria-current={inSports ? 'page' : undefined}><Icon name="sports" />Sports</NavLink>
       <NavLink to="/account/bets"><Icon name="bets" />My bets</NavLink>
       <NavLink to="/virtuals"><Icon name="virtuals" />Virtuals</NavLink>
       <button className="mode-switch" onClick={() => nav('/casino')} aria-label="Switch to casino"><Icon name="casino" size={24} /><span>Casino</span></button>

@@ -36,6 +36,7 @@ const paths: Record<string, string> = {
   hockey: 'M4 4l7 13h6a2 2 0 0 0 2-2M14 20h6',
   esports: 'M6 9h12a3 3 0 0 1 3 3l-1 5a2 2 0 0 1-3.5 1L14 16h-4l-2.5 2A2 2 0 0 1 4 17l-1-5a3 3 0 0 1 3-3zM8 12v2M7 13h2M16 12.5h.01M18 13.5h.01',
   tabletennis: 'M14 3a6 6 0 0 1 4.2 10.2l-5 5-4.4-4.4 5-5M8.8 13.8 4 18.6 5.4 20l4.8-4.8M19 19.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z',
+  az: 'M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z',
   check: 'M5 12l5 5 9-10',
   plus: 'M12 5v14M5 12h14',
   share: 'M12 3v12M8 7l4-4 4 4M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6',

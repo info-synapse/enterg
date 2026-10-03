@@ -15,10 +15,15 @@ type Tab = 'highlights' | 'competitions' | 'coupon';
 
 /* ---------- Shared pieces ---------- */
 
+/** Sport switcher. On mobile it starts with "Sports A–Z" (the full list); desktop has that list in the left rail. */
 function SportStrip({ active }: { active: string }) {
   const { sports } = useSportsNav();
   return (
     <nav className="sport-strip" aria-label="Choose a sport">
+      <NavLink to="/sports" className={`show-mobile ${active === 'az' ? 'active' : ''}`} aria-current={active === 'az' ? 'page' : undefined}>
+        <Icon name="az" size={22} />
+        Sports A–Z
+      </NavLink>
       {sports.map((s) => (
         <NavLink key={s.id} to={`/sport/${s.id}`} className={s.id === active ? 'active' : ''}>
           <Icon name={s.icon} size={22} />
@@ -376,14 +381,15 @@ export function CompetitionPage() {
   );
 }
 
-/** Mobile "Sports" tab: the A–Z list that lives in the left rail on desktop. */
+/** "Sports A–Z" (first item of the sport strip on mobile): the list that lives in the left rail on desktop. */
 export function SportsIndex() {
   const { sports, competitions } = useSportsNav();
   const fav = useFavourites();
   const mine = competitions.filter((c) => fav.isFav(c.id));
   return (
     <SportsFrame>
-      <h1 className="page-title">Sports</h1>
+      <SportStrip active="az" />
+      <h1 className="page-title">Sports A–Z</h1>
       {mine.length > 0 && (
         <section className="section">
           <h2 style={{ fontSize: 'var(--fs-md)' }}>My competitions</h2>
@@ -391,7 +397,7 @@ export function SportsIndex() {
         </section>
       )}
       <section className="section">
-        <h2 style={{ fontSize: 'var(--fs-md)' }}>Sports A–Z</h2>
+        <h2 style={{ fontSize: 'var(--fs-md)' }}>All sports</h2>
         <div className="card" style={{ padding: '4px 16px' }}>
           <div className="list">
             {sports.map((s) => (
