@@ -1,5 +1,5 @@
 // Pre-match sport page: Highlights · Competitions · Coupon, plus the single-competition page.
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Link, NavLink, Navigate, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { api } from '@/api';
 import type { Competition } from '@/api/types';
@@ -70,6 +70,15 @@ function CompChip({ c }: { c: Competition }) {
       <Flag region={c.region} />{c.name}
     </Link>
   );
+}
+
+/** Competition tabs: flag + name (+ match count), scrolls the active one into view. */
+function CompTabs({ children, activeKey }: { children: ReactNode; activeKey: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    ref.current?.querySelector('[aria-selected="true"]')?.scrollIntoView({ inline: 'center', block: 'nearest' });
+  }, [activeKey]);
+  return <div ref={ref} className="comp-tabs" role="tablist" aria-label="Competitions">{children}</div>;
 }
 
 /* ---------- Page shell ---------- */
@@ -291,7 +300,6 @@ function Coupon({ sportId }: { sportId: string }) {
     if (v) next.set(k, v); else next.delete(k);
     setParams(next, { replace: true });
   };
-  const removeLeague = (id: string) => setParam('c', leagues.filter((x) => x !== id).join(',') || null);
 
   // "Top competitions" order: starred, then featured, then by region group.
   const rank = useMemo(() => {
@@ -308,7 +316,20 @@ function Coupon({ sportId }: { sportId: string }) {
   useEffect(() => {
     document.querySelector('.coupon-windows [aria-selected="true"]')?.scrollIntoView({ inline: 'center', block: 'nearest' });
   }, [w.id]);
-  const nameOf = (id: string) => comps.data?.find((c) => c.id === id)?.name ?? id;
+  const compOf = (id: string) => comps.data?.find((c) => c.id === id);
+
+  // Competition tabs: the chosen leagues, or every competition with matches in this window.
+  const counts = useMemo(() => {
+    const m = new Map<string, number>();
+    events.forEach((e) => m.set(e.competitionId, (m.get(e.competitionId) ?? 0) + 1));
+    return m;
+  }, [events]);
+  const tabIds = useMemo(() => {
+    const ids = leagues.length ? leagues : [...counts.keys()];
+    return [...ids].sort((a, b) => (rank.get(a) ?? 9999) - (rank.get(b) ?? 9999));
+  }, [leagues, counts, rank]);
+  const focus = tabIds.includes(params.get('f') ?? '') ? params.get('f') : null;
+  const shown = focus ? events.filter((e) => e.competitionId === focus) : events;
 
   return (
     <>
@@ -319,13 +340,26 @@ function Coupon({ sportId }: { sportId: string }) {
           </button>
         ))}
       </div>
+      {tabIds.length > 1 && (
+        <CompTabs activeKey={focus ?? 'all'}>
+          <button role="tab" aria-selected={!focus} className={`comp-tab ${!focus ? 'active' : ''}`} onClick={() => setParam('f', null)}>
+            <Icon name={sportId === 'football' ? 'football' : 'sports'} size={18} />All<span className="n num">{events.length}</span>
+          </button>
+          {tabIds.map((id) => {
+            const c = compOf(id);
+            return (
+              <button key={id} role="tab" aria-selected={focus === id} className={`comp-tab ${focus === id ? 'active' : ''}`} onClick={() => setParam('f', id)}>
+                <Flag region={c?.region ?? ''} size={18} />{c?.name ?? id}<span className="n num">{counts.get(id) ?? 0}</span>
+              </button>
+            );
+          })}
+        </CompTabs>
+      )}
       {leagues.length > 0 && (
         <div className="toolbar">
-          <span className="hint">Showing</span>
-          {leagues.map((id) => (
-            <button key={id} className="removable" onClick={() => removeLeague(id)} aria-label={`Remove ${nameOf(id)}`}>{nameOf(id)}<Icon name="close" size={14} /></button>
-          ))}
+          <span className="hint">{leagues.length} {leagues.length === 1 ? 'league' : 'leagues'} chosen</span>
           <button className="link" onClick={() => nav(`/sport/${sportId}/competitions`, { state: { select: leagues } })}>Edit leagues</button>
+          <button className="link" onClick={() => { const next = new URLSearchParams(params); next.delete('c'); next.delete('f'); setParams(next, { replace: true }); }}>Show all leagues</button>
         </div>
       )}
       <div className="toolbar">
@@ -333,13 +367,13 @@ function Coupon({ sportId }: { sportId: string }) {
           <button className={sort === 'top' ? 'active' : ''} onClick={() => setSort('top')}>Top competitions</button>
           <button className={sort === 'time' ? 'active' : ''} onClick={() => setSort('time')}>Kick-off time</button>
         </div>
-        <span className="hint num" style={{ marginLeft: 'auto' }}>{loading ? '' : `${events.length} matches`}</span>
+        <span className="hint num" style={{ marginLeft: 'auto' }}>{loading ? '' : `${shown.length} matches`}</span>
       </div>
       <MarketTabs sportId={sportId} value={market} onChange={setMarket} />
       {loading ? <ListSkeleton rows={8} /> : (
         <EventList
-          events={events}
-          groupBy={sort === 'top' ? 'competition' : 'time'}
+          events={shown}
+          groupBy={focus ? 'day' : sort === 'top' ? 'competition' : 'time'}
           emptyText={leagues.length ? 'No matches for these leagues in this window. Try All dates.' : 'No matches in this window. Pick a longer one.'}
         />
       )}
@@ -367,6 +401,7 @@ export function CompetitionPage() {
         </div>
         {comp && <span style={{ marginLeft: 'auto' }}><StarButton id={comp.id} name={comp.name} /></span>}
       </nav>
+      <CompetitionSwitcher sportId={sportId} current={compId} />
       {live.data && live.data.length > 0 && (
         <section className="section">
           <div className="section-head"><h2><span className="live-badge" style={{ fontSize: 'inherit' }}>Live now</span></h2></div>
@@ -378,6 +413,25 @@ export function CompetitionPage() {
         {loading ? <ListSkeleton /> : <EventList events={data ?? []} groupBy="day" emptyText="No upcoming matches in this competition yet." />}
       </section>
     </SportsFrame>
+  );
+}
+
+/** Tabs to jump between competitions: yours (starred), the popular ones, and the one you're on. */
+function CompetitionSwitcher({ sportId, current }: { sportId: string; current: string }) {
+  const comps = useAsync(() => api.sportsbook.getCompetitions(sportId), [sportId]);
+  const fav = useFavourites();
+  const list = (comps.data ?? []).filter((c) => fav.isFav(c.id) || c.featured || c.id === current);
+  list.sort((a, b) => Number(fav.isFav(b.id)) - Number(fav.isFav(a.id)) || GROUP_ORDER.indexOf(a.group) - GROUP_ORDER.indexOf(b.group));
+  if (list.length < 2) return null;
+  return (
+    <CompTabs activeKey={current}>
+      {list.map((c) => (
+        <Link key={c.id} role="tab" aria-selected={c.id === current} className={`comp-tab ${c.id === current ? 'active' : ''}`} to={`/sport/${sportId}/competition/${c.id}`} replace>
+          <Flag region={c.region} size={18} />{c.name}{fav.isFav(c.id) && <Icon name="star" size={13} />}
+        </Link>
+      ))}
+      <Link className="comp-tab more" to={`/sport/${sportId}/competitions`}>All competitions<Icon name="chevronRight" size={14} /></Link>
+    </CompTabs>
   );
 }
 

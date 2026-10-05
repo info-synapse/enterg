@@ -959,3 +959,16 @@ a.rw-card:hover { border-color: var(--ink-3); }
 .rail-arrow.left { left: -12px; }
 .rail-arrow.right { right: -12px; }
 @media (max-width: 640px) { .rail-arrow { top: 85px; } }
+/* Competition tabs (coupon + competition page) */
+.comp-tabs { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin-inline: -4px; padding: 2px 4px; }
+.comp-tabs::-webkit-scrollbar { display: none; }
+.comp-tab {
+  display: inline-flex; align-items: center; gap: 8px; height: 44px; padding: 0 14px 0 10px; border-radius: var(--r-md); white-space: nowrap; flex-shrink: 0;
+  background: var(--surface); border: 1px solid var(--line); color: var(--ink-2); font-size: var(--fs-sm); font-weight: 600;
+}
+.comp-tab:hover { color: var(--ink); border-color: var(--ink-3); }
+.comp-tab.active { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+.comp-tab .n { font-size: var(--fs-xs); opacity: 0.65; }
+.comp-tab svg { color: var(--accent-text); }
+.comp-tab.active svg { color: var(--accent); }
+.comp-tab.more { color: var(--accent-text); background: transparent; border-style: dashed; }
