@@ -33,7 +33,7 @@ function StakeInput({ id, value, onChange }: { id: string; value: number; onChan
 export function BetSlipPanel({ onClose }: { onClose?: () => void }) {
   const slip = useBetSlip();
   const { player, balance } = useAuth();
-  const [tab, setTab] = useState<'slip' | 'open'>('slip');
+  const [tab, setTab] = useState<'slip' | 'open' | 'code'>('slip');
   const count = slip.selections.length;
 
   return (
@@ -44,6 +44,7 @@ export function BetSlipPanel({ onClose }: { onClose?: () => void }) {
             Bet slip {count > 0 && <span className="slip-count" style={{ display: 'inline-grid', marginLeft: 6 }}>{count}</span>}
           </button>
           <button role="tab" aria-selected={tab === 'open'} className={tab === 'open' ? 'active' : ''} onClick={() => setTab('open')}>My bets</button>
+          <button role="tab" aria-selected={tab === 'code'} className={tab === 'code' ? 'active' : ''} onClick={() => setTab('code')}>Code</button>
         </div>
         {tab === 'slip' && count > 0 && (
           <button className="icon-btn" style={{ marginLeft: 'auto' }} onClick={slip.clear} aria-label="Remove all selections"><Icon name="trash" size={18} /></button>
@@ -53,6 +54,15 @@ export function BetSlipPanel({ onClose }: { onClose?: () => void }) {
 
       {tab === 'open' ? (
         <OpenBets />
+      ) : tab === 'code' ? (
+        <div className="slip-body">
+          <div className="slip-empty" style={{ paddingBottom: 0 }}>
+            <Icon name="copy" size={28} />
+            <strong style={{ color: 'var(--ink)' }}>Copy a bet</strong>
+            <span>Paste a booking code from a friend. The selections are added to your bet slip at today’s odds.</span>
+          </div>
+          <BookingCode onLoaded={() => setTab('slip')} />
+        </div>
       ) : slip.receipt ? (
         <Receipt bets={slip.receipt} onDone={() => { slip.dismissReceipt(); onClose?.(); }} />
       ) : count === 0 ? (
@@ -62,7 +72,7 @@ export function BetSlipPanel({ onClose }: { onClose?: () => void }) {
             <strong style={{ color: 'var(--ink)' }}>Your bet slip is empty</strong>
             <span>Tap any odds to add a selection. You can combine up to {MAX_SELECTIONS}.</span>
           </div>
-          <BookingCode />
+          <button className="link" style={{ alignSelf: 'center' }} onClick={() => setTab('code')}>Have a booking code?</button>
         </div>
       ) : (
         <>
@@ -149,9 +159,8 @@ function Receipt({ bets, onDone }: { bets: Bet[]; onDone: () => void }) {
 }
 
 /** "Have a booking code?" in the empty slip: loads a shared slip at today's odds. */
-function BookingCode() {
+function BookingCode({ onLoaded }: { onLoaded: () => void }) {
   const slip = useBetSlip();
-  const [open, setOpen] = useState(false);
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
@@ -162,20 +171,23 @@ function BookingCode() {
       const r = await api.sportsbook.loadSharedSlip(code);
       const added = slip.addMany(r.selections);
       if (!added) setError(r.dropped ? 'None of these selections are available any more.' : 'These selections are already in your slip.');
-      else toast(`${added} ${added === 1 ? 'selection' : 'selections'} added${r.dropped ? ` · ${r.dropped} no longer available` : ''}`);
+      else {
+        toast(`${added} ${added === 1 ? 'selection' : 'selections'} added${r.dropped ? ` · ${r.dropped} no longer available` : ''}`);
+        setCode('');
+        onLoaded();
+      }
     } catch (e) {
       setError((e as Error).message);
     } finally {
       setBusy(false);
     }
   };
-  if (!open) return <button className="link" style={{ alignSelf: 'center' }} onClick={() => setOpen(true)}>Have a booking code?</button>;
   return (
     <div className="inline-panel">
-      <label htmlFor="booking-code" className="hint">Booking code from a friend</label>
+      <label htmlFor="booking-code" className="hint">Booking code</label>
       <div style={{ display: 'flex', gap: 8 }}>
-        <input id="booking-code" className="input num" autoFocus placeholder="EG…" value={code} onChange={(e) => setCode(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && code && load()} />
-        <button className="btn btn-primary" disabled={!code || busy} onClick={load}>{busy ? '…' : 'Load'}</button>
+        <input id="booking-code" className="input num" autoFocus autoCapitalize="characters" autoComplete="off" placeholder="EG…" value={code} onChange={(e) => setCode(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && code && load()} />
+        <button className="btn btn-primary" disabled={!code || busy} onClick={load}>{busy ? '…' : 'Add'}</button>
       </div>
       {error && <div className="alert" role="alert">{error}</div>}
     </div>
@@ -212,6 +224,12 @@ export function SlipPillAndSheet({ sportsMode }: { sportsMode: boolean }) {
         <button className={`slip-pill ${sportsMode ? 'sports' : ''}`} onClick={() => slip.setSheetOpen(true)} aria-label={`Open bet slip, ${count} selections`}>
           <span className="slip-count">{count}</span>
           <span className="num">{count > 1 ? fmtOdds(slip.totalOdds) : fmtOdds(slip.liveOdds(slip.selections[0]))}</span>
+        </button>
+      )}
+      {/* Empty slip stays one tap away on sports pages, for booking codes and open bets. */}
+      {count === 0 && sportsMode && !slip.sheetOpen && !slip.pillHidden && (
+        <button className="slip-pill sports empty" onClick={() => slip.setSheetOpen(true)} aria-label="Open bet slip">
+          <Icon name="bets" size={22} />
         </button>
       )}
       {slip.sheetOpen && (

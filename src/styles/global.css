@@ -945,3 +945,5 @@ a.rw-card:hover { border-color: var(--ink-3); }
 .crumbs .page-title { color: var(--ink); font-size: var(--fs-xl); }
 .tag { white-space: nowrap; }
 .game-trophy.raised { bottom: 44px; }
+.slip-pill.empty { width: 48px; padding: 0; justify-content: center; background: var(--surface); color: var(--ink); border: 1px solid var(--line); }
+.slip .seg button { padding: 0 12px; }
