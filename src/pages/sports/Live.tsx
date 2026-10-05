@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { api } from '@/api';
 import { EventList, ListSkeleton } from '@/components/EventRow';
 import { Icon } from '@/components/Icon';
-import { StoriesStrip } from '@/components/Stories';
 import { useAsync } from '@/lib/useAsync';
 import { marketTabLabel, marketsFor } from '@/lib/markets';
 import { SportsFrame, useSportsNav } from './SportsFrame';
@@ -24,13 +23,12 @@ export function Live() {
   };
   return (
     <SportsFrame>
-      <StoriesStrip vertical="live" />
       <div className="section-head"><h1 className="page-title">Live betting</h1><span className="meta num">{total} matches</span></div>
       <div className="chips" role="tablist" aria-label="Sport">
         <button role="tab" aria-selected={sport === 'all'} className={`chip ${sport === 'all' ? 'active' : ''}`} onClick={() => pick('all')}>All<span className="n">{total}</span></button>
         {sports.filter((s) => s.liveCount > 0).map((s) => (
           <button key={s.id} role="tab" aria-selected={sport === s.id} className={`chip ${sport === s.id ? 'active' : ''}`} onClick={() => pick(s.id)}>
-            <Icon name={s.icon} size={16} />{s.name}<span className="n">{s.liveCount}</span>
+            <Icon name={s.icon} size={20} />{s.name}<span className="n">{s.liveCount}</span>
           </button>
         ))}
       </div>

@@ -21,12 +21,12 @@ function SportStrip({ active }: { active: string }) {
   return (
     <nav className="sport-strip" aria-label="Choose a sport">
       <NavLink to="/sports" className={`show-mobile ${active === 'az' ? 'active' : ''}`} aria-current={active === 'az' ? 'page' : undefined}>
-        <Icon name="az" size={22} />
+        <Icon name="az" size={30} />
         Sports A–Z
       </NavLink>
       {sports.map((s) => (
         <NavLink key={s.id} to={`/sport/${s.id}`} className={s.id === active ? 'active' : ''}>
-          <Icon name={s.icon} size={22} />
+          <Icon name={s.icon} size={30} />
           {s.name}
         </NavLink>
       ))}
