@@ -19,6 +19,20 @@ export function useMode() {
   return pathname.startsWith('/casino') || pathname.startsWith('/live-casino') ? 'casino' : 'sports';
 }
 
+/** Appearance: follow the phone, or force light/dark. Lives in the account menu and the footer (not the crowded mobile top bar). */
+function ThemeChoice() {
+  const { theme, setTheme } = useTheme();
+  return (
+    <span className="seg" role="radiogroup" aria-label="Appearance">
+      {(['system', 'light', 'dark'] as const).map((t) => (
+        <button key={t} role="radio" aria-checked={theme === t} className={theme === t ? 'active' : ''} onClick={() => setTheme(t)}>
+          {t === 'system' ? 'Auto' : t === 'light' ? <><Icon name="sun" size={14} /> Light</> : <><Icon name="moon" size={14} /> Dark</>}
+        </button>
+      ))}
+    </span>
+  );
+}
+
 function ThemeButton() {
   const { theme, setTheme } = useTheme();
   const dark = theme === 'dark' || (theme === 'system' && window.matchMedia?.('(prefers-color-scheme: dark)').matches);
@@ -73,6 +87,7 @@ function AccountMenu() {
             <button className="list-row" onClick={() => go('/casino/rewards')}><Icon name="trophy" /><span className="main-col t">Rewards</span><Icon name="chevronRight" size={16} /></button>
             <button className="list-row" onClick={() => go('/account/bets')}><Icon name="bets" /><span className="main-col t">Bet history</span><Icon name="chevronRight" size={16} /></button>
             <button className="list-row" onClick={() => go('/account/protection')}><Icon name="shield" /><span className="main-col t">Limits and safer play</span><Icon name="chevronRight" size={16} /></button>
+            <div className="list-row theme-row"><Icon name="moon" /><span className="main-col t">Appearance</span><ThemeChoice /></div>
             <button className="list-row" onClick={() => { setOpen(false); logout(); nav('/'); }}><Icon name="logout" /><span className="main-col t">Log out</span></button>
           </div>
         </div>
@@ -224,6 +239,7 @@ export function Footer() {
       <div className="links">
         <Link to="/account/protection">Safer gambling</Link><span>Terms and conditions</span><span>Privacy policy</span><span>Payments</span><span>Help centre</span><span>Licence information</span>
       </div>
+      <div className="footer-appearance"><span>Appearance</span><ThemeChoice /></div>
       <span>Prototype build with sample data. No real money is used.</span>
     </footer>
   );

@@ -978,3 +978,8 @@ a.rw-card:hover { border-color: var(--ink-3); }
 :root .mc-head:not(.stuck) { border-color: transparent; }
 :root .odd:not(.selected):not(:hover) { border-color: transparent; }
 
+.footer-appearance { display: flex; align-items: center; gap: 12px; }
+.footer-appearance .seg button, .list-row .seg button { height: 30px; padding: 0 10px; font-size: var(--fs-xs); display: inline-flex; align-items: center; gap: 4px; }
+.theme-row { flex-wrap: wrap; row-gap: 10px; }
+.theme-row .seg { width: 100%; }
+.theme-row .seg button { flex: 1; justify-content: center; }
