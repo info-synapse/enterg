@@ -13,6 +13,7 @@ import { useAuth } from '@/state/AuthContext';
 import { useLiveJackpot } from '@/state/LiveContext';
 import { StoriesStrip } from '@/components/Stories';
 import { RewardsCard } from './Rewards';
+import { ScrollRail } from '@/components/ScrollRail';
 import { refreshRewards, useRewards } from '@/state/useRewards';
 import { toast } from '@/components/Toast';
 
@@ -24,6 +25,9 @@ const QUICK: { label: string; on: (f: GameFilter) => boolean; flip: (f: GameFilt
   ...['Bonus Buy', 'Megaways', 'Jackpots', 'Wilds', 'Fixed paylines', 'Scatter'].map((x) => ({ label: x, on: (f: GameFilter) => f.features.includes(x), flip: (f: GameFilter) => ({ ...f, features: toggle(f.features, x) }) })),
 ];
 
+/** Every slot game, most popular first (the "All slots" category). */
+const allSlots = (games: Game[]) => games.filter((g) => g.category === 'slots').sort((a, b) => b.popularity - a.popularity);
+
 function useCasinoData() {
   const games = useAsync(() => api.casino.getGames(), []);
   const collections = useAsync(() => api.casino.getCollections('casino'), []);
@@ -31,12 +35,12 @@ function useCasinoData() {
   return { games: games.data ?? [], collections: collections.data ?? [], byId, loading: games.loading || collections.loading };
 }
 
-export function Rail({ title, games, to, count }: { title: string; games: Game[]; to?: string; count?: number }) {
+export function Rail({ title, games, to, count, max = 16 }: { title: string; games: Game[]; to?: string; count?: number; max?: number }) {
   if (!games.length) return null;
   return (
     <section className="section">
       <div className="section-head"><h2>{title}</h2>{count !== undefined && <span className="meta num">{count}</span>}{to && <Link className="more" to={to}>See all</Link>}</div>
-      <div className="rail-row">{games.slice(0, 16).map((g) => <GameTile key={g.id} game={g} />)}</div>
+      <ScrollRail label={title}>{games.slice(0, max).map((g) => <GameTile key={g.id} game={g} />)}</ScrollRail>
     </section>
   );
 }
@@ -99,6 +103,7 @@ export function CasinoLobby() {
           {collections.map((c) => (
             <Rail key={c.id} title={c.title} count={c.gameIds.length} to={c.id === 'jackpots' ? '/casino/jackpots' : `/casino/c/${c.id}`} games={c.gameIds.map((id) => byId.get(id)).filter(Boolean) as Game[]} />
           ))}
+          <Rail title="All slots" count={allSlots(games).length} to="/casino/c/all-slots" games={allSlots(games)} max={24} />
           <JackpotSection />
           <section className="section">
             <div className="section-head"><h2>Providers</h2><span className="meta num">{providers.data?.length}</span></div>
@@ -145,7 +150,10 @@ export function CollectionPage({ kind }: { kind: 'collection' | 'provider' | 'ja
   const providers = useAsync(() => api.casino.getProviders(), []);
   let title = '';
   let list: Game[] = [];
-  if (kind === 'collection') {
+  if (kind === 'collection' && id === 'all-slots') {
+    title = 'All slots';
+    list = allSlots(games);
+  } else if (kind === 'collection') {
     const c = collections.find((x) => x.id === id);
     title = c?.title ?? 'Games';
     list = (c?.gameIds.map((g) => byId.get(g)).filter(Boolean) as Game[]) ?? [];

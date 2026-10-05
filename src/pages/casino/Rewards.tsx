@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 import { api } from '@/api';
 import type { Mission, Rewards, Tournament } from '@/api/types';
 import { GameTile } from '@/components/GameTile';
+import { ScrollRail } from '@/components/ScrollRail';
 import { Icon } from '@/components/Icon';
 import { AppFrame } from '@/components/Layout';
 import { toast } from '@/components/Toast';
@@ -175,7 +176,7 @@ function TournamentCard({ t }: { t: Tournament }) {
       {eligible.length > 0 && (
         <>
           <span className="hint">Eligible games</span>
-          <div className="rail-row">{eligible.map((g) => <GameTile key={g.id} game={g} />)}</div>
+          <ScrollRail label="Eligible games">{eligible.map((g) => <GameTile key={g.id} game={g} />)}</ScrollRail>
         </>
       )}
     </article>

@@ -404,7 +404,9 @@ p { margin: 0; }
 .age { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--ink-3); display: grid; place-items: center; font-weight: 800; font-size: 0.68rem; color: var(--ink-2); flex-shrink: 0; }
 
 /* ---------- Casino ---------- */
-.rail-row { display: grid; grid-auto-flow: column; grid-auto-columns: 156px; gap: 12px; overflow-x: auto; scrollbar-width: thin; padding-bottom: 6px; }
+.rail-row { display: grid; grid-auto-flow: column; grid-auto-columns: 156px; gap: 12px; overflow-x: auto; scrollbar-width: none; padding-bottom: 6px; scroll-snap-type: x proximity; }
+.rail-row::-webkit-scrollbar { display: none; }
+.rail-row > * { scroll-snap-align: start; }
 .game-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
 .game { display: flex; flex-direction: column; gap: 6px; background: none; border: 0; padding: 0; text-align: left; min-width: 0; }
 .game-art { position: relative; aspect-ratio: 3 / 4; max-width: 100%; border-radius: var(--r-md); overflow: hidden; transition: transform 0.15s; }
@@ -947,3 +949,13 @@ a.rw-card:hover { border-color: var(--ink-3); }
 .game-trophy.raised { bottom: 44px; }
 .slip-pill.empty { width: 48px; padding: 0; justify-content: center; background: var(--surface); color: var(--ink); border: 1px solid var(--line); }
 .slip .seg button { padding: 0 12px; }
+/* Rail arrows (desktop): float over the edges of the artwork */
+.scroll-rail { position: relative; min-width: 0; }
+.rail-arrow {
+  position: absolute; top: 104px; transform: translateY(-50%); z-index: 3; width: 40px; height: 40px; border-radius: 50%;
+  display: grid; place-items: center; background: var(--surface); color: var(--ink); border: 1px solid var(--line); box-shadow: var(--shadow); cursor: pointer;
+}
+.rail-arrow:hover { background: var(--surface-2); }
+.rail-arrow.left { left: -12px; }
+.rail-arrow.right { right: -12px; }
+@media (max-width: 640px) { .rail-arrow { top: 85px; } }
