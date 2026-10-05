@@ -9,6 +9,7 @@ import { useBetSlip } from '@/state/BetSlipContext';
 import { useFavourites } from '@/state/FavouritesContext';
 import { BrandMark, Icon } from './Icon';
 import { Toaster } from './Toast';
+import { useDesignPreview } from '@/state/designPreview';
 import { Flag } from './Flag';
 import { BetSlipPanel, SlipPillAndSheet } from './BetSlip';
 import { AuthModal } from './AuthModal';
@@ -225,7 +226,27 @@ export function Footer() {
         <Link to="/account/protection">Safer gambling</Link><span>Terms and conditions</span><span>Privacy policy</span><span>Payments</span><span>Help centre</span><span>Licence information</span>
       </div>
       <span>Prototype build with sample data. No real money is used.</span>
+      <DesignPreview />
     </footer>
+  );
+}
+
+/** Prototype only: compare the palette and border options from the design research doc. */
+function DesignPreview() {
+  const d = useDesignPreview();
+  return (
+    <div className="design-preview" aria-label="Design preview">
+      <strong>Design preview</strong>
+      <span className="seg" role="group" aria-label="Dark palette">
+        <button className={d.palette === 'navy' ? 'active' : ''} onClick={() => d.setPalette('navy')}>Night match</button>
+        <button className={d.palette === 'graphite' ? 'active' : ''} onClick={() => d.setPalette('graphite')}>Graphite</button>
+      </span>
+      <span className="seg" role="group" aria-label="Borders">
+        <button className={d.borders === 'current' ? 'active' : ''} onClick={() => d.setBorders('current')}>Borders: current</button>
+        <button className={d.borders === 'lean' ? 'active' : ''} onClick={() => d.setBorders('lean')}>Lean</button>
+      </span>
+      <span className="hint">Palette applies to the dark theme (moon button).</span>
+    </div>
   );
 }
 

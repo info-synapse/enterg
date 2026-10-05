@@ -12,7 +12,7 @@
   --line: #24344a;
   --ink: #e9eef5;
   --ink-2: #9cabbe;
-  --ink-3: #6e7f95;
+  --ink-3: #8597ac;
   --accent: #f4a62a;          /* saffron: CTAs and selected odds */
   --accent-ink: #1d1203;      /* text on saffron */
   --accent-text: #f7b955;     /* saffron used as text */
@@ -51,17 +51,17 @@
     --line: #dbe2ea;
     --ink: #0e1824;
     --ink-2: #4f6176;
-    --ink-3: #7a8a9d;
+    --ink-3: #607085;
     --accent: #f4a62a;
     --accent-ink: #1d1203;
     --accent-text: #9a5c00;
     --accent-soft: rgba(244, 166, 42, 0.16);
-    --live: #e2392c;
-    --good: #138a5c;
-    --bad: #d03b3b;
+    --live: #c9302a;
+    --good: #0d7650;
+    --bad: #b62f2c;
     --warn: #a77a00;
-    --odds-up: #138a5c;
-    --odds-down: #d03b3b;
+    --odds-up: #0d7650;
+    --odds-down: #b62f2c;
     --overlay: rgba(14, 24, 36, 0.45);
     --shadow: 0 10px 30px rgba(14, 24, 36, 0.14);
     color-scheme: light;
@@ -75,17 +75,17 @@
   --line: #dbe2ea;
   --ink: #0e1824;
   --ink-2: #4f6176;
-  --ink-3: #7a8a9d;
+  --ink-3: #607085;
   --accent: #f4a62a;
   --accent-ink: #1d1203;
   --accent-text: #9a5c00;
   --accent-soft: rgba(244, 166, 42, 0.16);
-  --live: #e2392c;
-  --good: #138a5c;
-  --bad: #d03b3b;
+  --live: #c9302a;
+  --good: #0d7650;
+  --bad: #b62f2c;
   --warn: #a77a00;
-  --odds-up: #138a5c;
-  --odds-down: #d03b3b;
+  --odds-up: #0d7650;
+  --odds-down: #b62f2c;
   --overlay: rgba(14, 24, 36, 0.45);
   --shadow: 0 10px 30px rgba(14, 24, 36, 0.14);
   color-scheme: light;
@@ -972,3 +972,39 @@ a.rw-card:hover { border-color: var(--ink-3); }
 .comp-tab svg { color: var(--accent-text); }
 .comp-tab.active svg { color: var(--accent); }
 .comp-tab.more { color: var(--accent-text); background: transparent; border-style: dashed; }
+
+/* ================= Design preview: palette "Graphite" (dark theme only) and "Lean" borders ================= */
+@media (prefers-color-scheme: dark) {
+  :root[data-palette='graphite']:not([data-theme='light']) {
+  --bg: #111316;
+  --surface: #1a1d21;
+  --surface-2: #22262b;
+  --surface-3: #2c3137;
+  --line: #2e3339;
+  --ink: #eceef1;
+  --ink-2: #a5abb4;
+  --ink-3: #8d949f;
+  --overlay: rgba(6, 7, 9, 0.66);
+  }
+}
+:root[data-palette='graphite'][data-theme='dark'] {
+  --bg: #111316;
+  --surface: #1a1d21;
+  --surface-2: #22262b;
+  --surface-3: #2c3137;
+  --line: #2e3339;
+  --ink: #eceef1;
+  --ink-2: #a5abb4;
+  --ink-3: #8d949f;
+  --overlay: rgba(6, 7, 9, 0.66);
+}
+
+/* Lean borders: one boundary signal per element. Containers keep their surface tone, lose the 1px border. */
+:root[data-borders='lean'] :is(.market, .card, .event-list, .bet-card, .mc-body, .rw-card, .build, .scoreboard, .jp-card, .slip-item:not(.conflict)) { border-color: transparent; }
+:root[data-borders='lean'] .mc-head:not(.stuck) { border-color: transparent; }
+:root[data-borders='lean'] .odd:not(.selected):not(:hover) { border-color: transparent; }
+:root[data-borders='lean'] .event-list .event-row + .event-row { border-top-color: var(--line); }
+
+.design-preview { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; padding: 12px; border: 1px dashed var(--line); border-radius: var(--r-md); }
+.design-preview strong { color: var(--ink-2); font-size: var(--fs-xs); }
+.design-preview .seg button { height: 30px; font-size: var(--fs-xs); }
