@@ -42,6 +42,13 @@ export interface Market {
   selections: Selection[];
 }
 
+export interface TimelineItem {
+  minute: number;
+  type: 'goal' | 'card' | 'corner' | 'sub';
+  team: 0 | 1;
+  text: string;
+}
+
 export interface LiveState {
   minute: number;
   period: string; // "1H", "2H", "Q3", "Set 2"
@@ -50,6 +57,37 @@ export interface LiveState {
   corners?: [number, number];
   lastAction?: string;
   stats?: { label: string; home: number; away: number }[];
+  /** Key match events, newest first (match centre Timeline tab). */
+  timeline?: TimelineItem[];
+}
+
+/** Player markets as one table: a row per player, a column per market (Anytime, First, 2+ …). */
+export interface PlayerTable {
+  id: string;
+  name: string; // "Goalscorer", "Shots on target", "Cards"
+  columns: string[]; // market names, one per column
+  betBuilder: boolean;
+  rows: { player: string; team: 'home' | 'away'; position: string; cells: (Selection | null)[] }[];
+}
+
+/** Ready-made Bet Builder combination shown at the top of the Bet Builder tab. */
+export interface BuildSuggestion {
+  id: string;
+  title: string;
+  selectionIds: string[];
+}
+
+/** Fast ("next event") market on a live match: open for a short window, then settles. */
+export interface MicroMarket {
+  id: string;
+  eventId: string;
+  title: string; // "Corner in the next 5 minutes"
+  window: string; // "63′–68′"
+  opensAt: string;
+  closesAt: string;
+  status: 'open' | 'settling' | 'settled';
+  selections: Selection[];
+  result?: string; // shown after settlement
 }
 
 export interface SportEvent {
@@ -70,6 +108,9 @@ export interface EventDetail extends SportEvent {
   markets: Market[];
   form?: { home: string; away: string }; // "WWDLW"
   winProbability?: [number, number, number];
+  players?: PlayerTable[];
+  builds?: BuildSuggestion[];
+  h2h?: { date: string; home: string; away: string; score: string }[];
 }
 
 /* ---------- Bets ---------- */
@@ -82,6 +123,12 @@ export interface SlipSelection {
   label: string;
   odds: number;
   live?: boolean;
+  /** Bet Builder line: the legs inside this one selection. */
+  builder?: { selectionId: string; label: string; marketName: string }[];
+  /** Fast (micro) market selection. */
+  fast?: boolean;
+  /** Open bets only: the leg's odds right now, as the trading platform sees them (drives cash-out). */
+  oddsNow?: number;
 }
 
 export type BetStatus = 'open' | 'won' | 'lost' | 'cashed_out' | 'void';
@@ -96,6 +143,10 @@ export interface Bet {
   status: BetStatus;
   legs: SlipSelection[];
   cashOutValue?: number;
+  /** Auto cash-out target: the gateway cashes out when the value reaches it. */
+  autoCashOut?: number;
+  /** Money already taken through partial cash-outs. */
+  cashedOut?: number;
 }
 
 export interface PlaceBetRequest {
@@ -105,6 +156,39 @@ export interface PlaceBetRequest {
 }
 
 /* ---------- Casino ---------- */
+
+export interface Mission {
+  id: string;
+  title: string;
+  detail: string;
+  progress: number;
+  target: number;
+  xp: number;
+  status: 'active' | 'done' | 'claimed';
+}
+
+export interface Tournament {
+  id: string;
+  title: string;
+  rule: string; // how the leaderboard is scored
+  prize: string;
+  endsAt: string;
+  joined: boolean;
+  gameIds: string[];
+  leaderboard: { rank: number; name: string; score: number }[];
+  me?: { rank: number; score: number };
+}
+
+export interface Rewards {
+  level: number;
+  xp: number;
+  levelFrom: number; // XP where this level started
+  levelTo: number; // XP needed for the next level
+  nextReward: string;
+  missions: Mission[];
+  missionsResetAt: string;
+  tournaments: Tournament[];
+}
 
 export interface Game {
   id: string;

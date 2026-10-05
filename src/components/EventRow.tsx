@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import type { SportEvent } from '@/api/types';
 import { kickoff } from '@/lib/format';
 import { dayLabel } from '@/lib/markets';
@@ -9,6 +9,7 @@ import { Flag, regionOf } from './Flag';
 
 export function EventRow({ event, showCompetition }: { event: SportEvent; showCompetition?: boolean }) {
   const live = useLiveClock(event.id, event.live);
+  const nav = useNavigate();
   const name = `${event.home} – ${event.away}`;
   return (
     <div className="event-row">
@@ -29,7 +30,10 @@ export function EventRow({ event, showCompetition }: { event: SportEvent; showCo
           <div className="event-meta">
             {showCompetition && <span>{event.competitionName}</span>}
             {event.badges?.includes('boost') && <span className="tag accent">Boost</span>}
-            {event.badges?.includes('betbuilder') && <span className="tag">Bet Builder</span>}
+            {event.badges?.includes('betbuilder') && (
+              // Opens the match straight on its Bet Builder tab.
+              <span className="tag bb-tag" onClick={(e) => { e.preventDefault(); nav(`/event/${event.id}?tab=builder`); }}>Bet Builder</span>
+            )}
             {event.badges?.includes('stream') && <span className="tag live">Stream</span>}
           </div>
         </div>

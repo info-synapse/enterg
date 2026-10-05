@@ -9,8 +9,10 @@ import { Home } from '@/pages/sports/Home';
 import { Live } from '@/pages/sports/Live';
 import { CompetitionPage, SportPage, SportsIndex } from '@/pages/sports/SportPage';
 import { EventPage } from '@/pages/sports/EventPage';
+import { SharedSlip } from '@/pages/sports/SharedSlip';
 import { Virtuals } from '@/pages/sports/Virtuals';
 import { CasinoLobby, CollectionPage, GamePlay } from '@/pages/casino/Casino';
+import { RewardsPage } from '@/pages/casino/Rewards';
 import { LiveCasino } from '@/pages/casino/LiveCasino';
 import { BetHistory, Overview, Profile, Transactions } from '@/pages/account/Account';
 import { Deposit, PaymentForm, Withdraw } from '@/pages/account/Payments';
@@ -42,12 +44,14 @@ export default function App() {
                 <Route path="/sport/:sportId/competition/:compId" element={<CompetitionPage />} />
                 <Route path="/sport/:sportId/:tab" element={<SportPage />} />
                 <Route path="/event/:eventId" element={<EventPage />} />
+                <Route path="/slip/:code" element={<SharedSlip />} />
                 <Route path="/virtuals" element={<Virtuals />} />
                 <Route path="/casino" element={<CasinoLobby />} />
                 <Route path="/casino/c/:id" element={<CollectionPage kind="collection" />} />
                 <Route path="/casino/provider/:id" element={<CollectionPage kind="provider" />} />
                 <Route path="/casino/jackpots" element={<CollectionPage kind="jackpots" />} />
                 <Route path="/casino/play/:id" element={<GamePlay />} />
+                <Route path="/casino/rewards" element={<RewardsPage />} />
                 <Route path="/live-casino" element={<LiveCasino />} />
                 <Route path="/account" element={<Overview />} />
                 <Route path="/account/deposit" element={<Deposit />} />

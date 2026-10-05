@@ -3,7 +3,7 @@
 import type {
   Balance, Bet, Collection, EventDetail, Game, Jackpot, Limit, LiveTable, PaymentMethod,
   PaymentResult, PlaceBetRequest, Player, Promo, Provider, Sport, SportEvent, Transaction,
-  VirtualEvent, VirtualLeague, Competition, CasinoFilterOptions, StoryGroup,
+  VirtualEvent, VirtualLeague, Competition, CasinoFilterOptions, StoryGroup, SlipSelection, MicroMarket, Rewards,
 } from './types';
 
 export interface EventQuery {
@@ -28,7 +28,18 @@ export interface SportsbookService {
   getEvent(id: string): Promise<EventDetail | undefined>;
   placeBet(req: PlaceBetRequest): Promise<{ bets: Bet[]; newBalance: number }>;
   getBets(status: 'open' | 'settled'): Promise<Bet[]>;
-  cashOut(betId: string): Promise<{ amount: number }>;
+  /** Full cash-out, or partial when amount is below the current value. Returns the part still running. */
+  cashOut(betId: string, amount?: number): Promise<{ amount: number; remaining?: Bet }>;
+  /** Auto cash-out rule, executed by the gateway. null removes it. */
+  setAutoCashOut(betId: string, target: number | null): Promise<Bet>;
+  /** Prices a Bet Builder combination (correlated odds) and returns it as one slip line. */
+  priceBetBuilder(eventId: string, selectionIds: string[]): Promise<SlipSelection>;
+  /** Fast markets for a live match (next corner, next point …). */
+  getMicroMarkets(eventId: string): Promise<MicroMarket[]>;
+  /** Booking code + link for a set of selections (stakes are never shared). */
+  shareSlip(selections: SlipSelection[]): Promise<{ code: string; url: string }>;
+  /** Re-prices a shared slip at today's odds and drops what is no longer available. */
+  loadSharedSlip(code: string): Promise<{ selections: SlipSelection[]; dropped: number }>;
 }
 
 export interface CasinoService {
@@ -41,6 +52,10 @@ export interface CasinoService {
   getFilterOptions(): Promise<CasinoFilterOptions>;
   /** Returns the provider launch URL for an authenticated session (or demo mode). */
   launchGame(gameId: string, mode: 'real' | 'demo'): Promise<{ url: string }>;
+  /** Missions, level and tournaments for the logged-in player. */
+  getRewards(): Promise<Rewards>;
+  claimMission(missionId: string): Promise<Rewards>;
+  joinTournament(tournamentId: string): Promise<Rewards>;
 }
 
 export interface VirtualsService {

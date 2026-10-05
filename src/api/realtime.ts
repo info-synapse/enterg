@@ -1,12 +1,14 @@
 // Live updates (odds, match clock, live tables, jackpots).
 // In production this is a WebSocket to the gateway; here a timer fakes the same push messages.
 import { events, liveTables, jackpots } from './mock/data';
+import { runAutoCashOuts } from './mock';
 
 export type RealtimeMessage =
   | { topic: 'odds'; selectionId: string; odds: number; trend: -1 | 1; suspended?: boolean }
   | { topic: 'clock'; eventId: string; minute: number; score: [number, number]; lastAction?: string }
   | { topic: 'table'; tableId: string; result?: number; players: number }
-  | { topic: 'jackpot'; jackpotId: string; tier: string; amount: number };
+  | { topic: 'jackpot'; jackpotId: string; tier: string; amount: number }
+  | { topic: 'cashout'; betId: string; amount: number; auto: true };
 
 type Listener = (msg: RealtimeMessage) => void;
 const listeners = new Set<Listener>();
@@ -24,6 +26,8 @@ function tick() {
     s.odds = Math.max(1.01, Math.round((s.odds * (1 + dir * (0.02 + Math.random() * 0.05))) * 100) / 100);
     emit({ topic: 'odds', selectionId: s.id, odds: s.odds, trend: dir as -1 | 1 });
   }
+  // auto cash-out rules (the gateway runs these in production)
+  for (const c of runAutoCashOuts()) emit({ topic: 'cashout', betId: c.betId, amount: c.amount, auto: true });
   // clocks move every few ticks
   if (Math.random() < 0.35) {
     for (const e of live) {

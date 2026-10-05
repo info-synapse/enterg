@@ -3,6 +3,7 @@ import { api } from '@/api';
 import type { Bet, SlipSelection } from '@/api/types';
 import { useAuth } from './AuthContext';
 import { useOddsLookup } from './LiveContext';
+import { toast } from '@/components/Toast';
 
 export const MAX_SELECTIONS = 20;
 
@@ -10,6 +11,11 @@ interface SlipValue {
   selections: SlipSelection[];
   has: (selectionId: string) => boolean;
   toggle: (s: SlipSelection) => void;
+  /** Adds several selections (shared slip, Bet Builder line), skipping ones already in the slip. */
+  addMany: (list: SlipSelection[]) => number;
+  /** Hides the floating slip pill while another bottom bar (the Bet Builder bar) is on screen. */
+  pillHidden: boolean;
+  setPillHidden: (h: boolean) => void;
   remove: (selectionId: string) => void;
   clear: () => void;
   mode: 'single' | 'combo';
@@ -44,6 +50,7 @@ export function BetSlipProvider({ children }: { children: ReactNode }) {
   const [receipt, setReceipt] = useState<Bet[] | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [notice, setNotice] = useState<string>();
+  const [pillHidden, setPillHidden] = useState(false);
 
   const mode = selections.length < 2 ? 'single' : modeState;
   const has = useCallback((id: string) => selections.some((s) => s.selectionId === id), [selections]);
@@ -55,12 +62,23 @@ export function BetSlipProvider({ children }: { children: ReactNode }) {
       if (prev.some((p) => p.selectionId === s.selectionId)) return prev.filter((p) => p.selectionId !== s.selectionId);
       if (prev.length >= MAX_SELECTIONS) {
         setNotice(`You can add up to ${MAX_SELECTIONS} selections.`);
+        toast(`You can add up to ${MAX_SELECTIONS} selections.`, 'info');
         return prev;
       }
       setStakes((st) => (st[s.selectionId] ? st : { ...st, [s.selectionId]: 5 }));
       return [...prev, s];
     });
   }, []);
+
+  const addMany = useCallback((list: SlipSelection[]) => {
+    setReceipt(null);
+    setError(undefined);
+    const fresh = list.filter((s) => !selections.some((p) => p.selectionId === s.selectionId)).slice(0, MAX_SELECTIONS - selections.length);
+    if (!fresh.length) return 0;
+    setSelections((prev) => [...prev, ...fresh]);
+    setStakes((st) => ({ ...st, ...Object.fromEntries(fresh.filter((s) => !st[s.selectionId]).map((s) => [s.selectionId, 5])) }));
+    return fresh.length;
+  }, [selections]);
 
   const liveOdds = useCallback((s: SlipSelection) => lookup(s.selectionId, s.odds), [lookup]);
   const conflict = useMemo(() => new Set(selections.map((s) => s.eventId)).size !== selections.length, [selections]);
@@ -103,6 +121,9 @@ export function BetSlipProvider({ children }: { children: ReactNode }) {
     selections,
     has,
     toggle,
+    addMany,
+    pillHidden,
+    setPillHidden,
     remove: (id) => setSelections((p) => p.filter((s) => s.selectionId !== id)),
     clear: () => setSelections([]),
     mode,

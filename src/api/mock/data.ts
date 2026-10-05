@@ -1,7 +1,7 @@
 // Mock data used until the real back-end APIs are connected.
 // Names of games, dealers and players are invented. Teams and providers are used only as sample data.
 import type {
-  StoryGroup, Collection, Competition, EventDetail, Game, Jackpot, LiveTable, Market, PaymentMethod,
+  StoryGroup, Collection, Competition, EventDetail, Game, Jackpot, LiveTable, Market, PaymentMethod, PlayerTable, BuildSuggestion, TimelineItem,
   Player, Promo, Provider, Sport, Transaction, VirtualEvent, VirtualLeague, Bet, Limit,
 } from '../types';
 
@@ -209,9 +209,82 @@ function eventMarkets(e: { sportId: string; home: string; away: string }): Marke
     { id: `m${selId++}`, name: 'Correct score', group: 'specials', betBuilder: false, selections: [sel('1-0', 6.5), sel('2-0', 8.5), sel('2-1', 8.75), sel('1-1', 6.25), sel('0-0', 9.5), sel('0-1', 11), sel('1-2', 13), sel('0-2', 17)] },
     { id: `m${selId++}`, name: 'Asian handicap -0.5', group: 'asian', betBuilder: false, selections: [sel(e.home, 1.9), sel(e.away, 1.9)] },
     { id: `m${selId++}`, name: 'Total corners 9.5', group: 'specials', betBuilder: true, selections: [sel('Over 9.5', 1.95), sel('Under 9.5', 1.8)] },
-    { id: `m${selId++}`, name: 'Anytime goalscorer', group: 'players', betBuilder: true, selections: [sel(`${e.home} striker`, 2.4), sel(`${e.away} striker`, 3.1), sel(`${e.home} winger`, 3.6)] },
     { id: `m${selId++}`, name: 'Result & both teams score', group: 'combos', betBuilder: false, selections: [sel('1 & Yes', 4.4), sel('X & Yes', 4.9), sel('2 & Yes', 7.5)] },
   ];
+}
+
+/* ---------- Players (invented names) ---------- */
+
+const SURNAMES = ['Vlachos', 'Rinaldi', 'Moreau', 'Kostić', 'Jansen', 'Almeida', 'Lindqvist', 'Novak', 'Mavros', 'Herrera', 'Duarte', 'Keller', 'Brandt', 'Okafor', 'Delgado', 'Fischer', 'Nikolaou', 'Petrou', 'Andrade', 'Varga', 'Holm', 'Sarris', 'Barros', 'Leclerc'];
+const INITIALS = 'ADEGJKLMNPRST';
+const POSITIONS = ['FW', 'FW', 'MF', 'DF'] as const;
+const between = (a: number, b: number) => a + rand() * (b - a);
+
+function squad() {
+  return POSITIONS.map((position) => ({ name: `${pick(INITIALS.split(''))}. ${pick(SURNAMES)}`, position }));
+}
+
+/** Goalscorer, shots and cards tables for a football match, odds scaled by position and team strength. */
+function playerTables(homeStrength: number): PlayerTable[] {
+  const sides = [
+    { team: 'home' as const, squad: squad(), k: 1.15 - homeStrength * 0.3 },
+    { team: 'away' as const, squad: squad(), k: 0.85 + homeStrength * 0.3 },
+  ];
+  const rows = (cells: (pos: string, k: number) => (number | null)[]) =>
+    sides.flatMap((side) => side.squad.map((p) => ({ player: p.name, team: side.team, position: p.position, cells: cells(p.position, side.k).map((o) => (o ? sel(p.name, o) : null)) })));
+  const goal = { FW: [2.2, 3.2], MF: [4.4, 6], DF: [8, 11] } as Record<string, [number, number]>;
+  const shot = { FW: [1.35, 1.75], MF: [1.9, 2.6], DF: [3.2, 4.2] } as Record<string, [number, number]>;
+  const card = { FW: [5, 7], MF: [3.6, 4.6], DF: [3.1, 3.9] } as Record<string, [number, number]>;
+  return [
+    {
+      id: `pt${selId++}`, name: 'Goalscorer', betBuilder: true, columns: ['Anytime goalscorer', 'First goalscorer', 'To score 2 or more'],
+      rows: rows((pos, k) => { const a = between(...goal[pos]) * k; return [a, a * 2.3, pos === 'DF' ? null : a * 4.2]; }),
+    },
+    {
+      id: `pt${selId++}`, name: 'Shots on target', betBuilder: true, columns: ['1+ shots on target', '2+ shots on target'],
+      rows: rows((pos, k) => { const a = between(...shot[pos]) * k; return [a, a * 2.4]; }),
+    },
+    {
+      id: `pt${selId++}`, name: 'Cards', betBuilder: true, columns: ['To be booked'],
+      rows: rows((pos) => [between(...card[pos])]),
+    },
+  ];
+}
+
+/** Ready-made Bet Builder combinations for the top of the tab. */
+function buildsFor(ev: EventDetail): BuildSuggestion[] {
+  const m = (name: string) => ev.markets.find((x) => x.name === name);
+  const fav = ev.mainMarket.selections[0].odds <= ev.mainMarket.selections[2].odds ? 0 : 2;
+  const favTeam = fav === 0 ? ev.home : ev.away;
+  const scorer = ev.players?.[0].rows.find((r) => r.team === (fav === 0 ? 'home' : 'away') && r.position === 'FW');
+  const shots = ev.players?.[1].rows.find((r) => r.team === (fav === 0 ? 'home' : 'away') && r.position === 'FW');
+  const list: BuildSuggestion[] = [];
+  const o15 = m('Total goals 1.5')?.selections[0];
+  const btts = m('Both teams to score')?.selections[0];
+  const o25 = m('Total goals 2.5')?.selections[0];
+  const corners = m('Total corners 9.5')?.selections[0];
+  if (o15 && scorer?.cells[0]) list.push({ id: `bs${selId++}`, title: `${favTeam} win, over 1.5 goals, ${scorer.player} to score`, selectionIds: [ev.mainMarket.selections[fav].id, o15.id, scorer.cells[0].id] });
+  if (btts && o25) list.push({ id: `bs${selId++}`, title: 'Both teams score, over 2.5 goals', selectionIds: [btts.id, o25.id] });
+  if (corners && shots?.cells[0]) list.push({ id: `bs${selId++}`, title: `${favTeam} win, over 9.5 corners, ${shots.player} 1+ shot on target`, selectionIds: [ev.mainMarket.selections[fav].id, corners.id, shots.cells[0].id] });
+  return list;
+}
+
+function timelineFor(home: string, away: string, minute: number, score: [number, number], cards: [number, number]): TimelineItem[] {
+  const items: TimelineItem[] = [];
+  const at = () => 2 + Math.floor(rand() * Math.max(1, minute - 3));
+  ([0, 1] as const).forEach((team) => {
+    for (let i = 0; i < score[team]; i++) items.push({ minute: at(), type: 'goal', team, text: `Goal · ${team === 0 ? home : away}` });
+    for (let i = 0; i < cards[team]; i++) items.push({ minute: at(), type: 'card', team, text: `Yellow card · ${team === 0 ? home : away}` });
+  });
+  for (let i = 0; i < 2; i++) { const team = rand() < 0.5 ? 0 : 1; items.push({ minute: at(), type: 'corner', team, text: `Corner · ${team === 0 ? home : away}` }); }
+  return items.sort((a, b) => b.minute - a.minute);
+}
+
+function h2hFor(home: string, away: string) {
+  return Array.from({ length: 5 }, (_, i) => {
+    const flip = rand() < 0.5;
+    return { date: `${2025 - Math.floor(i / 2)}-${pick(['02', '04', '09', '11'])}-${10 + Math.floor(rand() * 18)}`, home: flip ? away : home, away: flip ? home : away, score: `${Math.floor(rand() * 4)}–${Math.floor(rand() * 3)}` };
+  });
 }
 
 export const events: EventDetail[] = [];
@@ -248,6 +321,11 @@ function makeEvents() {
         form: { home: formString(), away: formString() },
         winProbability: probs(main),
       };
+      if (sportId === 'football') {
+        ev.players = playerTables(probs(main)[0] / 100);
+        ev.builds = buildsFor(ev);
+        ev.h2h = h2hFor(home, away);
+      }
       if (isLive) {
         const goalsH = Math.floor(rand() * (minute / 35 + 1));
         const goalsA = Math.floor(rand() * (minute / 40 + 1));
@@ -266,6 +344,7 @@ function makeEvents() {
           ],
         };
         ev.live.stats![0].away = 100 - ev.live.stats![0].home;
+        if (sportId === 'football') ev.live.timeline = timelineFor(home, away, minute, ev.live.score, ev.live.cards!);
       }
       events.push(ev);
     }
@@ -516,14 +595,20 @@ export const demoTransactions: Transaction[] = [
   { id: 'tx-9842', type: 'deposit', amount: 20, method: 'Paysafecard', status: 'failed', createdAt: new Date(now - 9 * day).toISOString(), reference: 'DP-20260924-9842' },
 ];
 
+const liveFootball = events.filter((e) => e.live && e.sportId === 'football');
+const legOf = (e: EventDetail, m: Market, i: number, placedAt: number) => ({
+  selectionId: m.selections[i].id, eventId: e.id, eventName: `${e.home} – ${e.away}`, marketName: m.name, label: m.selections[i].label, odds: Math.round(m.selections[i].odds * placedAt * 100) / 100, live: true,
+});
+const openLegs = [
+  legOf(liveFootball[0], liveFootball[0].mainMarket, 0, 1.18),
+  legOf(liveFootball[1], liveFootball[1].markets[1], 0, 1.1),
+];
+const openSingle = legOf(liveFootball[2] ?? liveFootball[0], (liveFootball[2] ?? liveFootball[0]).mainMarket, 0, 1.25);
+const comboOdds = Math.round(openLegs[0].odds * openLegs[1].odds * 100) / 100;
+
 export const demoBets: Bet[] = [
-  {
-    id: 'BT-55120', placedAt: new Date(now - 0.3 * day).toISOString(), kind: 'combo', stake: 10, totalOdds: 4.62, potentialReturn: 46.2, status: 'open', cashOutValue: 13.4,
-    legs: [
-      { selectionId: 'x1', eventId: events[0].id, eventName: `${events[0].home} – ${events[0].away}`, marketName: 'Match result', label: '1', odds: 1.75 },
-      { selectionId: 'x2', eventId: events[1].id, eventName: `${events[1].home} – ${events[1].away}`, marketName: 'Total goals 2.5', label: 'Over 2.5', odds: 2.64 },
-    ],
-  },
+  { id: 'BT-55120', placedAt: new Date(now - 0.05 * day).toISOString(), kind: 'combo', stake: 10, totalOdds: comboOdds, potentialReturn: Math.round(10 * comboOdds * 100) / 100, status: 'open', legs: openLegs },
+  { id: 'BT-55131', placedAt: new Date(now - 0.03 * day).toISOString(), kind: 'single', stake: 20, totalOdds: openSingle.odds, potentialReturn: Math.round(20 * openSingle.odds * 100) / 100, status: 'open', legs: [openSingle] },
   {
     id: 'BT-55098', placedAt: new Date(now - 1.2 * day).toISOString(), kind: 'single', stake: 25, totalOdds: 1.7, potentialReturn: 42.5, status: 'won',
     legs: [{ selectionId: 'x3', eventId: 'e900', eventName: 'Panathinaikos – Real Madrid', marketName: 'Winner', label: 'Panathinaikos', odds: 1.7 }],

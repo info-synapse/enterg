@@ -8,6 +8,7 @@ import { useTheme } from '@/state/ThemeContext';
 import { useBetSlip } from '@/state/BetSlipContext';
 import { useFavourites } from '@/state/FavouritesContext';
 import { BrandMark, Icon } from './Icon';
+import { Toaster } from './Toast';
 import { Flag } from './Flag';
 import { BetSlipPanel, SlipPillAndSheet } from './BetSlip';
 import { AuthModal } from './AuthModal';
@@ -69,6 +70,7 @@ function AccountMenu() {
           </div>
           <div className="list">
             <button className="list-row" onClick={() => go('/account')}><Icon name="user" /><span className="main-col t">My account</span><Icon name="chevronRight" size={16} /></button>
+            <button className="list-row" onClick={() => go('/casino/rewards')}><Icon name="trophy" /><span className="main-col t">Rewards</span><Icon name="chevronRight" size={16} /></button>
             <button className="list-row" onClick={() => go('/account/bets')}><Icon name="bets" /><span className="main-col t">Bet history</span><Icon name="chevronRight" size={16} /></button>
             <button className="list-row" onClick={() => go('/account/protection')}><Icon name="shield" /><span className="main-col t">Limits and safer play</span><Icon name="chevronRight" size={16} /></button>
             <button className="list-row" onClick={() => { setOpen(false); logout(); nav('/'); }}><Icon name="logout" /><span className="main-col t">Log out</span></button>
@@ -251,6 +253,7 @@ export function AppFrame({ children, left, slipRail = true }: { children: ReactN
       <SlipPillAndSheet sportsMode={slipRail} />
       {search && (mode === 'casino' ? <CasinoSearch onClose={() => setSearch(false)} /> : <SearchSheet onClose={() => setSearch(false)} />)}
       <AuthModal />
+      <Toaster />
     </>
   );
 }

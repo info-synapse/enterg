@@ -2,18 +2,20 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { realtime, type RealtimeMessage } from '@/api/realtime';
 import type { LiveState, Selection } from '@/api/types';
+import { toast } from '@/components/Toast';
 
 interface LiveStore {
   odds: Map<string, { odds: number; trend: -1 | 1; at: number }>;
   clocks: Map<string, { minute: number; score: [number, number]; lastAction?: string }>;
   tables: Map<string, { results: number[] }>;
   jackpots: Map<string, number>;
+  cashouts: { betId: string; amount: number }[];
 }
 
 const Ctx = createContext<{ store: LiveStore; version: number } | null>(null);
 
 export function LiveProvider({ children }: { children: ReactNode }) {
-  const [store] = useState<LiveStore>(() => ({ odds: new Map(), clocks: new Map(), tables: new Map(), jackpots: new Map() }));
+  const [store] = useState<LiveStore>(() => ({ odds: new Map(), clocks: new Map(), tables: new Map(), jackpots: new Map(), cashouts: [] }));
   const [version, setVersion] = useState(0);
   useEffect(
     () =>
@@ -25,6 +27,10 @@ export function LiveProvider({ children }: { children: ReactNode }) {
           store.tables.set(m.tableId, { results: [m.result, ...prev].slice(0, 5) });
         }
         if (m.topic === 'jackpot') store.jackpots.set(`${m.jackpotId}:${m.tier}`, m.amount);
+        if (m.topic === 'cashout') {
+          store.cashouts.push({ betId: m.betId, amount: m.amount });
+          toast(`Auto cash-out: €${m.amount.toFixed(2)} from ${m.betId} is in your balance.`);
+        }
         setVersion((v) => v + 1);
       }),
     [store],
@@ -61,6 +67,12 @@ export function useLiveTable(tableId: string, base?: number[]) {
 export function useLiveJackpot(key: string, base: number) {
   const { store } = useLive();
   return store.jackpots.get(key) ?? base;
+}
+
+/** Bets the gateway cashed out automatically during this visit (My bets refreshes on change). */
+export function useAutoCashOuts() {
+  const { store } = useLive();
+  return store.cashouts;
 }
 
 /** Latest odds for any selection id (used by the bet slip). */

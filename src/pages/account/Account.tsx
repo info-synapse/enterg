@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { api } from '@/api';
 import type { Bet, Transaction } from '@/api/types';
 import { Icon } from '@/components/Icon';
+import { OpenBetCard } from '@/components/BetCards';
 import { dateTime, money, odds as fmtOdds, shortDate } from '@/lib/format';
 import { useAsync } from '@/lib/useAsync';
 import { useAuth } from '@/state/AuthContext';
@@ -74,7 +75,7 @@ function BetCard({ bet }: { bet: Bet }) {
           <div key={l.selectionId} className="leg"><span><strong>{l.label}</strong> · {l.marketName}<br /><span className="hint">{l.eventName}</span></span><span className="o">{fmtOdds(l.odds)}</span></div>
         ))}
       </div>
-      <div className="kv"><span>Stake {money(bet.stake)} · odds {fmtOdds(bet.totalOdds)}</span><strong>{bet.status === 'lost' ? money(0) : money(bet.potentialReturn)}</strong></div>
+      <div className="kv"><span>Stake {money(bet.stake)} · odds {fmtOdds(bet.totalOdds)}</span><strong>{bet.status === 'lost' ? money(0) : bet.status === 'cashed_out' ? money(bet.cashedOut ?? 0) : money(bet.potentialReturn)}</strong></div>
     </div>
   );
 }
@@ -96,7 +97,7 @@ export function BetHistory() {
         <input id="bet-q" className="input" placeholder="Search by bet ID" value={q} onChange={(e) => setQ(e.target.value)} />
         <span className="hint">Last 6 months</span>
       </div>
-      {loading ? <div className="skeleton" style={{ height: 200 }} /> : list.length ? list.map((b) => <BetCard key={b.id} bet={b} />) : <div className="card"><div className="empty"><Icon name="bets" size={28} />{tab === 'open' ? 'No open bets.' : 'No settled bets in this period.'}</div></div>}
+      {loading ? <div className="skeleton" style={{ height: 200 }} /> : list.length ? list.map((b) => (tab === 'open' ? <OpenBetCard key={b.id} bet={b} /> : <BetCard key={b.id} bet={b} />)) : <div className="card"><div className="empty"><Icon name="bets" size={28} />{tab === 'open' ? 'No open bets.' : 'No settled bets in this period.'}</div></div>}
     </AccountFrame>
   );
 }

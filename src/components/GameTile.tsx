@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import type { Game, LiveTable } from '@/api/types';
 import { money } from '@/lib/format';
 import { GameArt, TableArt } from './Art';
+import { Icon } from './Icon';
+import { useRewards } from '@/state/useRewards';
 
 
 const RED = new Set([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36]);
@@ -31,6 +33,8 @@ function TileMenu({ game, onClose }: { game: Game; onClose: () => void }) {
 export function GameTile({ game }: { game: Game }) {
   const nav = useNavigate();
   const [menu, setMenu] = useState(false);
+  const rewards = useRewards();
+  const inTournament = rewards?.tournaments.some((t) => t.gameIds.includes(game.id));
   return (
     <div className="game">
       <button className="game-art" onClick={() => nav(`/casino/play/${game.id}`)} aria-label={`${game.name} by ${game.provider}`}>
@@ -41,6 +45,7 @@ export function GameTile({ game }: { game: Game }) {
           {game.bonusBuy && <span className="tag">Bonus Buy</span>}
         </span>
         {game.jackpot && <span className="game-jp num">{money(game.jackpot)}</span>}
+        {inTournament && <span className={`game-trophy ${game.jackpot ? 'raised' : ''}`} title="Counts for a tournament"><Icon name="trophy" size={13} strokeWidth={2.2} /></span>}
       </button>
       <button className="tile-dots" onClick={() => setMenu((m) => !m)} aria-label={`More about ${game.name}`} aria-expanded={menu}>⋮</button>
       {menu && <TileMenu game={game} onClose={() => setMenu(false)} />}

@@ -30,7 +30,12 @@ export const httpApi: Api = {
     getEvent: (id) => http('GET', `/events/${id}`),
     placeBet: (req) => http('POST', '/bets', req),
     getBets: (status) => http('GET', `/bets${qs({ status })}`),
-    cashOut: (betId) => http('POST', `/bets/${betId}/cashout`),
+    cashOut: (betId, amount) => http('POST', `/bets/${betId}/cashout`, { amount }),
+    setAutoCashOut: (betId, target) => http('PUT', `/bets/${betId}/auto-cashout`, { target }),
+    priceBetBuilder: (eventId, selectionIds) => http('POST', `/events/${eventId}/bet-builder/price`, { selectionIds }),
+    getMicroMarkets: (eventId) => http('GET', `/events/${eventId}/micro-markets`),
+    shareSlip: (selections) => http('POST', '/slips/share', { selectionIds: selections.map((s) => s.selectionId) }),
+    loadSharedSlip: (code) => http('GET', `/slips/${encodeURIComponent(code)}`),
   },
   casino: {
     getGames: () => http('GET', '/casino/games'),
@@ -40,6 +45,9 @@ export const httpApi: Api = {
     getLiveTables: () => http('GET', '/live-casino/tables'),
     getFilterOptions: () => http('GET', '/casino/filters'),
     launchGame: (gameId, mode) => http('POST', `/casino/games/${gameId}/launch`, { mode }),
+    getRewards: () => http('GET', '/rewards'),
+    claimMission: (id) => http('POST', `/rewards/missions/${id}/claim`),
+    joinTournament: (id) => http('POST', `/rewards/tournaments/${id}/join`),
   },
   virtuals: {
     getLeagues: () => http('GET', '/virtuals/leagues'),

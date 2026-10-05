@@ -12,6 +12,9 @@ import { useAsync } from '@/lib/useAsync';
 import { useAuth } from '@/state/AuthContext';
 import { useLiveJackpot } from '@/state/LiveContext';
 import { StoriesStrip } from '@/components/Stories';
+import { RewardsCard } from './Rewards';
+import { refreshRewards, useRewards } from '@/state/useRewards';
+import { toast } from '@/components/Toast';
 
 // Quick chips under the stories: each one switches a value in the full filter panel.
 const QUICK: { label: string; on: (f: GameFilter) => boolean; flip: (f: GameFilter) => GameFilter }[] = [
@@ -62,6 +65,7 @@ export function CasinoLobby() {
   return (
     <AppFrame slipRail={false}>
       <StoriesStrip vertical="casino" />
+      <RewardsCard />
       <div className="chips" aria-label="Filter games">
         <button className={`chip filter-chip ${n ? 'active' : ''}`} onClick={() => setPanel(true)} aria-label={`All filters${n ? `, ${n} selected` : ''}`}>
           <Icon name="filter" size={16} />Filters{n > 0 && <span className="f-badge">{n}</span>}
@@ -170,15 +174,22 @@ export function GamePlay() {
   const [launch, setLaunch] = useState<{ url: string; mode: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const [params] = useSearchParams();
+  const rewards = useRewards();
   useEffect(() => {
     if (params.get('demo')) start('demo');
   }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
   const start = async (mode: 'real' | 'demo') => {
     if (mode === 'real' && !player) return openAuth('login');
     setBusy(true);
+    const before = rewards?.missions.filter((m) => m.status !== 'active').map((m) => m.id) ?? [];
     const r = await api.casino.launchGame(id, mode);
     setLaunch({ url: r.url, mode });
     setBusy(false);
+    if (mode === 'real') {
+      const after = await refreshRewards();
+      const done = after.missions.find((m) => m.status === 'done' && !before.includes(m.id));
+      if (done) toast(`Mission complete: ${done.title}. Claim ${done.xp} XP in Rewards.`);
+    }
   };
   if (!game) return <AppFrame slipRail={false}><div className="skeleton" style={{ height: 360 }} /></AppFrame>;
   const similar = games.filter((g) => g.id !== game.id && (g.provider === game.provider || g.volatility === game.volatility)).slice(0, 8);
@@ -202,6 +213,7 @@ export function GamePlay() {
           )}
         </div>
       </div>
+      {player && rewards && <GameRewardsStrip gameId={game.id} />}
       <div className="card">
         <div className="grid-2">
           <div className="kv"><span>RTP</span><strong>{game.rtp}%</strong></div>
@@ -213,5 +225,22 @@ export function GamePlay() {
       </div>
       <Rail title="You might also like" games={similar} />
     </AppFrame>
+  );
+}
+
+/** Under the game: the tournament this game counts for, and the next open mission. Quiet, below the game frame. */
+function GameRewardsStrip({ gameId }: { gameId: string }) {
+  const r = useRewards();
+  if (!r) return null;
+  const t = r.tournaments.find((x) => x.gameIds.includes(gameId));
+  const m = r.missions.find((x) => x.status === 'active');
+  if (!t && !m) return null;
+  return (
+    <Link to="/casino/rewards" className="rw-strip">
+      {t && (
+        <span><Icon name="trophy" size={16} />{t.joined ? (t.me ? <>{t.title}: <strong>#{t.me.rank}</strong>, best {t.me.score}×</> : <>Counts for {t.title}</>) : <>Counts for {t.title} · join in Rewards</>}</span>
+      )}
+      {m && <span><Icon name="star" size={16} />{m.title} <strong className="num">{m.progress}/{m.target}</strong></span>}
+    </Link>
   );
 }

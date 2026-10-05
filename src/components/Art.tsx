@@ -48,11 +48,11 @@ export function TableArt({ table }: { table: LiveTable }) {
   );
 }
 
-export function Crest({ name, hue }: { name: string; hue?: number }) {
+export function Crest({ name, hue, size }: { name: string; hue?: number; size?: number }) {
   const h = hue ?? [...name].reduce((a, c) => a + c.charCodeAt(0), 0) % 360;
   const initials = name.replace(/[^A-Za-zΑ-Ωα-ω ]/g, '').split(' ').filter(Boolean).map((w) => w[0]).slice(0, 2).join('').toUpperCase();
   return (
-    <span className="crest" style={{ background: `linear-gradient(135deg, ${hsl(h, 60, 42)}, ${hsl(h + 30, 60, 26)})` }}>
+    <span className="crest" style={{ background: `linear-gradient(135deg, ${hsl(h, 60, 42)}, ${hsl(h + 30, 60, 26)})`, ...(size ? { width: size, height: size, fontSize: size * 0.36 } : {}) }}>
       {initials}
     </span>
   );
