@@ -275,7 +275,7 @@ export interface Player {
   phone: string;
   address: string;
   favouriteTeam?: string;
-  kycStatus: 'verified' | 'pending' | 'required';
+  kycStatus: 'verified' | 'pending' | 'required' | 'unknown';
   memberSince: string;
 }
 

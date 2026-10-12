@@ -3,7 +3,9 @@
 import { mockApi } from './mock';
 import { httpApi } from './http';
 import type { Api } from './services';
+import { LOGIN_TEST_MODE } from './mode';
+import { loginTestApi } from './loginTest';
 
-export const api: Api = import.meta.env.VITE_USE_MOCKS === 'false' ? httpApi : mockApi;
+export const api: Api = LOGIN_TEST_MODE ? loginTestApi : import.meta.env.VITE_USE_MOCKS === 'false' ? httpApi : mockApi;
 export * from './types';
 export { realtime } from './realtime';

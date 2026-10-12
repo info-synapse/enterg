@@ -2,6 +2,7 @@
 // In production this is a WebSocket to the gateway; here a timer fakes the same push messages.
 import { events, liveTables, jackpots } from './mock/data';
 import { runAutoCashOuts } from './mock';
+import { LOGIN_TEST_MODE } from './mode';
 
 export type RealtimeMessage =
   | { topic: 'odds'; selectionId: string; odds: number; trend: -1 | 1; suspended?: boolean }
@@ -62,6 +63,7 @@ function emit(msg: RealtimeMessage) {
 
 export const realtime = {
   subscribe(listener: Listener) {
+    if (LOGIN_TEST_MODE) return () => {};
     listeners.add(listener);
     if (!timer) timer = setInterval(tick, 1600);
     return () => {

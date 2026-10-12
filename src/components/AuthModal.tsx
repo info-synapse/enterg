@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { useAuth } from '@/state/AuthContext';
 import { BrandMark, Icon } from './Icon';
+import { LOGIN_TEST_MODE } from '@/api/mode';
 
 export function AuthModal() {
   const { modal, openAuth } = useAuth();
@@ -12,11 +13,11 @@ export function AuthModal() {
           <BrandMark />
           <div className="seg" style={{ marginLeft: 8 }}>
             <button className={modal === 'login' ? 'active' : ''} onClick={() => openAuth('login')}>Log in</button>
-            <button className={modal === 'register' ? 'active' : ''} onClick={() => openAuth('register')}>Join</button>
+            {!LOGIN_TEST_MODE && <button className={modal === 'register' ? 'active' : ''} onClick={() => openAuth('register')}>Join</button>}
           </div>
           <button className="icon-btn" style={{ marginLeft: 'auto' }} onClick={() => openAuth(null)} aria-label="Close"><Icon name="close" /></button>
         </div>
-        {modal === 'login' ? <LoginForm /> : <RegisterForm />}
+        {modal === 'login' || LOGIN_TEST_MODE ? <LoginForm /> : <RegisterForm />}
       </div>
     </div>
   );
@@ -39,8 +40,8 @@ function Sso() {
 
 function LoginForm() {
   const { login, openAuth } = useAuth();
-  const [username, setUsername] = useState('demo_player');
-  const [password, setPassword] = useState('demo');
+  const [username, setUsername] = useState(LOGIN_TEST_MODE ? '' : 'demo_player');
+  const [password, setPassword] = useState(LOGIN_TEST_MODE ? '' : 'demo');
   const [error, setError] = useState<string>();
   const [busy, setBusy] = useState(false);
   const submit = async (e: FormEvent) => {
@@ -58,7 +59,7 @@ function LoginForm() {
   return (
     <form className="modal-body" onSubmit={submit}>
       <h2 style={{ fontSize: 'var(--fs-xl)' }}>Welcome back</h2>
-      <Sso />
+      {!LOGIN_TEST_MODE && <Sso />}
       <div className="field">
         <label htmlFor="login-user">Username or email</label>
         <input id="login-user" className="input" autoComplete="username" value={username} onChange={(e) => setUsername(e.target.value)} />
@@ -66,11 +67,11 @@ function LoginForm() {
       <div className="field">
         <label htmlFor="login-pass">Password</label>
         <input id="login-pass" className="input" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />
-        <span className="hint">Prototype: any username works with a password of 4 or more characters.</span>
+        <span className="hint">{LOGIN_TEST_MODE ? 'Use a test account from BetAPIService2. Demo credentials do not apply.' : 'Prototype: any username works with a password of 4 or more characters.'}</span>
       </div>
       {error && <div className="alert" role="alert">{error}</div>}
       <button className="btn btn-primary btn-block" disabled={busy}>{busy ? 'Logging in…' : 'Log in'}</button>
-      <p className="hint" style={{ textAlign: 'center' }}>New here? <button type="button" className="link" onClick={() => openAuth('register')}>Create an account</button></p>
+      {!LOGIN_TEST_MODE && <p className="hint" style={{ textAlign: 'center' }}>New here? <button type="button" className="link" onClick={() => openAuth('register')}>Create an account</button></p>}
       <div className="rg-footer"><span className="age">21+</span>Only adults aged 21 or over can play.</div>
     </form>
   );

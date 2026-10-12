@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { api } from '@/api';
+import { LOGIN_TEST_MODE } from '@/api/mode';
 import type { Competition, Game, Sport, SportEvent } from '@/api/types';
 import { money } from '@/lib/format';
 import { useAuth } from '@/state/AuthContext';
@@ -54,6 +55,7 @@ function AccountMenu() {
     document.addEventListener('mousedown', close);
     return () => document.removeEventListener('mousedown', close);
   }, []);
+  if (LOGIN_TEST_MODE && player) return <Link className="btn btn-ghost" to="/account">Signed in: {player.username}</Link>;
   if (!player || !balance) return null;
   const go = (to: string) => {
     setOpen(false);
@@ -115,12 +117,12 @@ export function Header({ onSearch }: { onSearch: () => void }) {
         {player ? (
           <>
             <AccountMenu />
-            <button className="btn btn-primary hide-mobile" onClick={() => nav('/account/deposit')}>Deposit</button>
+            {!LOGIN_TEST_MODE && <button className="btn btn-primary hide-mobile" onClick={() => nav('/account/deposit')}>Deposit</button>}
           </>
         ) : (
           <>
             <button className="btn btn-ghost" onClick={() => openAuth('login')}>Log in</button>
-            <button className="btn btn-primary" onClick={() => openAuth('register')}>Join</button>
+            {!LOGIN_TEST_MODE && <button className="btn btn-primary" onClick={() => openAuth('register')}>Join</button>}
           </>
         )}
       </div>
@@ -240,7 +242,7 @@ export function Footer() {
         <Link to="/account/protection">Safer gambling</Link><span>Terms and conditions</span><span>Privacy policy</span><span>Payments</span><span>Help centre</span><span>Licence information</span>
       </div>
       <div className="footer-appearance"><span>Appearance</span><ThemeChoice /></div>
-      <span>Prototype build with sample data. No real money is used.</span>
+      <span>{LOGIN_TEST_MODE ? 'Login test: backend authentication only. Sports content is sample data; wallet and wagering are disabled.' : 'Prototype build with sample data. No real money is used.'}</span>
     </footer>
   );
 }
@@ -258,7 +260,7 @@ export function AppFrame({ children, left, slipRail = true }: { children: ReactN
   const shellCls = left ? 'shell' : slipRail ? 'shell no-left' : 'shell full';
   return (
     <>
-      <div className="demo-banner">Prototype with sample data · log in with any username and a password of 4+ characters</div>
+      <div className="demo-banner">{LOGIN_TEST_MODE ? 'Login test · use a backend test account · sample sports data · wallet and wagering disabled' : 'Prototype with sample data · log in with any username and a password of 4+ characters'}</div>
       <Header onSearch={() => setSearch(true)} />
       <div className={shellCls}>
         {left}

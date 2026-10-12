@@ -3,6 +3,8 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { Icon } from '@/components/Icon';
 import { AppFrame } from '@/components/Layout';
 import { money } from '@/lib/format';
+import { LOGIN_TEST_MODE } from '@/api/mode';
+import { LoginTestAccount } from './LoginTestAccount';
 import { useAuth } from '@/state/AuthContext';
 
 const NAV: { group: string; items: { to: string; label: string; icon: string; end?: boolean }[] }[] = [
@@ -68,6 +70,7 @@ function BankReference() {
 export function AccountFrame({ children }: { children: ReactNode }) {
   const { player, openAuth, logout } = useAuth();
   const nav = useNavigate();
+  if (LOGIN_TEST_MODE) return <LoginTestAccount />;
   if (!player)
     return (
       <AppFrame slipRail={false}>

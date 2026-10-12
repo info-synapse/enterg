@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '@/api';
+import { LOGIN_TEST_MODE } from '@/api/mode';
 import type { Bet, Transaction } from '@/api/types';
 import { Icon } from '@/components/Icon';
 import { OpenBetCard } from '@/components/BetCards';
@@ -16,6 +17,7 @@ export function Overview() {
   const { player } = useAuth();
   const tx = useAsync(() => api.account.getTransactions({}), []);
   const bets = useAsync(() => api.sportsbook.getBets('open'), []);
+  if (LOGIN_TEST_MODE) return <AccountFrame>{null}</AccountFrame>;
   if (!player) return null;
   return (
     <AccountFrame>
