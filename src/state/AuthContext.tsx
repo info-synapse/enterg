@@ -31,13 +31,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [sessionError, setSessionError] = useState('');
   const [restoreAttempt, setRestoreAttempt] = useState(0);
   const revision = useRef(0);
+  const signingOut = useRef(false);
   const retrySession = useCallback(() => setRestoreAttempt(n => n + 1), []);
 
   useEffect(() => {
     if (!LOGIN_TEST_MODE) return;
     const current = ++revision.current;
     const controller = new AbortController();
-    const timeout = window.setTimeout(() => controller.abort(), 10000);
+    const timeout = window.setTimeout(() => controller.abort(), 20000);
     let active = true;
     setRestoring(true);
     setSessionError('');
@@ -57,6 +58,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     return () => { active = false; controller.abort(); window.clearTimeout(timeout); };
   }, [restoreAttempt]);
+
+  useEffect(() => {
+    if (!LOGIN_TEST_MODE || !player) return;
+    const controllers = new Set<AbortController>();
+    let active = true;
+    const onActivity = (event: Event) => {
+      if (!event.isTrusted || signingOut.current || (event instanceof KeyboardEvent && event.repeat)) return;
+      const current = revision.current;
+      const controller = new AbortController();
+      controllers.add(controller);
+      // Each user event reaches the gateway; only the gateway caches validation.
+      api.auth.activity(controller.signal).then(() => {
+        if (active && current === revision.current) setSessionError('');
+      }).catch((error: unknown) => {
+        if (!active || current !== revision.current || controller.signal.aborted || signingOut.current) return;
+        if ((error as { status?: number })?.status === 401) {
+          ++revision.current;
+          setPlayer(null);
+          setBalance(null);
+          setSessionError('');
+        } else if ((error as { status?: number })?.status !== 409) {
+          setSessionError('Could not validate your session. Try again shortly.');
+        }
+      }).finally(() => controllers.delete(controller));
+    };
+    const events = ['click', 'keydown', 'input', 'wheel', 'touchmove'];
+    for (const name of events) document.addEventListener(name, onActivity, { capture: true, passive: true });
+    return () => {
+      active = false;
+      for (const name of events) document.removeEventListener(name, onActivity, true);
+      for (const controller of controllers) controller.abort();
+    };
+  }, [player]);
 
   const refreshBalance = useCallback(async () => {
     if (LOGIN_TEST_MODE) { setBalance(null); return; }
@@ -81,7 +115,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
-    await api.auth.logout();
+    signingOut.current = true;
+    ++revision.current;
+    try { await api.auth.logout(); } finally { signingOut.current = false; }
     ++revision.current;
     setRestoring(false);
     setSessionError('');

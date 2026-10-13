@@ -111,10 +111,11 @@ export function Header({ onSearch }: { onSearch: () => void }) {
         <NavLink to="/live-casino">Live Casino</NavLink>
         <NavLink to="/virtuals">Virtuals</NavLink>
       </nav>
+      {sessionError && player && <span role="alert" className="hint">{sessionError}</span>}
       <div className="header-actions">
         <button className="icon-btn" onClick={onSearch} aria-label="Search"><Icon name="search" /></button>
         <span className="hide-mobile"><ThemeButton /></span>
-        {restoring ? <span role="status">Checking session…</span> : sessionError ? <button className="btn btn-ghost" onClick={retrySession}>Retry session check</button> : player ? (
+        {restoring ? <span role="status">Checking session…</span> : sessionError && !player ? <button className="btn btn-ghost" onClick={retrySession}>Retry session check</button> : player ? (
           <>
             <AccountMenu />
             {!LOGIN_TEST_MODE && <button className="btn btn-primary hide-mobile" onClick={() => nav('/account/deposit')}>Deposit</button>}

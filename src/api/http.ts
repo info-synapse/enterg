@@ -54,7 +54,11 @@ export const httpApi: Api = {
     getUpcoming: () => http('GET', '/virtuals/events'),
   },
   auth: {
-    getSession: (signal) => http('GET', '/auth/session', undefined, signal),
+    getSession: async (signal) => {
+      await http('GET', '/auth/session', undefined, signal);
+      return http('POST', '/auth/activity', {}, signal);
+    },
+    activity: (signal) => http('POST', '/auth/activity', {}, signal),
     login: (username, password) => http('POST', '/auth/login', { username, password }),
     register: (data) => http('POST', '/auth/register', data),
     logout: () => http('POST', '/auth/logout'),

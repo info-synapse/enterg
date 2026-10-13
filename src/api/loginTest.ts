@@ -11,7 +11,8 @@ function blocked<T extends object>(service: T): T {
 export const loginTestApi: Api = {
   ...mockApi,
   auth: {
-    getSession: httpApi.auth.getSession, login: httpApi.auth.login, logout: httpApi.auth.logout, register: unavailable },
+    getSession: httpApi.auth.getSession,
+    activity: httpApi.auth.activity, login: httpApi.auth.login, logout: httpApi.auth.logout, register: unavailable },
   account: blocked(mockApi.account),
   payments: blocked(mockApi.payments),
   sportsbook: {
