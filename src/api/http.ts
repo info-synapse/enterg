@@ -54,6 +54,10 @@ export const httpApi: Api = {
     getUpcoming: () => http('GET', '/virtuals/events'),
   },
   auth: {
+    getSessionId: async (signal) => {
+      const { sessionId } = await http<{ sessionId: string }>('POST', '/auth/session-id', {}, signal);
+      return sessionId;
+    },
     getSession: async (signal) => {
       await http('GET', '/auth/session', undefined, signal);
       return http('POST', '/auth/activity', {}, signal);

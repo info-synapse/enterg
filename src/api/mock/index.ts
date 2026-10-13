@@ -387,6 +387,7 @@ export const mockApi: Api = {
   },
 
   auth: {
+    getSessionId: async () => { throw new Error('Backend session ID is unavailable in demo mode.'); },
     activity: async () => { throw Object.assign(new Error('No demo session'), { status: 401 }); },
     getSession: async () => { throw Object.assign(new Error('No demo session'), { status: 401 }); },
     login: async (username, password) => {
