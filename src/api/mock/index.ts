@@ -389,13 +389,13 @@ export const mockApi: Api = {
   auth: {
     login: async (username, password) => {
       if (!username || password.length < 4) throw new ApiError('INVALID_CREDENTIALS', 'Check your username and password and try again.');
-      return delay({ token: 'demo-token', player: { ...state.player, username: username.includes('@') ? state.player.username : username } }, 600);
+      return delay({ player: { ...state.player, username: username.includes('@') ? state.player.username : username } }, 600);
     },
     register: async (data) => {
       const age = (Date.now() - Date.parse(data.dateOfBirth)) / (365.25 * 86_400_000);
       if (age < 21) throw new ApiError('UNDERAGE', 'You must be 21 or older to open an account.');
       state.player = { ...state.player, email: data.email, firstName: data.firstName, lastName: data.lastName, dateOfBirth: data.dateOfBirth, phone: data.phone, kycStatus: 'required', username: data.email.split('@')[0] };
-      return delay({ token: 'demo-token', player: state.player }, 800);
+      return delay({ player: state.player }, 800);
     },
     logout: () => delay(undefined, 150),
   },

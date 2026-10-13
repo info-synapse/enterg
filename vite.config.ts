@@ -9,5 +9,7 @@ import { fileURLToPath, URL } from 'node:url';
 export default defineConfig(({ mode }) => ({
   plugins: [react(), ...(mode === 'artifact' ? [viteSingleFile()] : [])],
   resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
+  // Same-origin browser requests work with either localhost or 127.0.0.1.
+  server: mode === 'login-test' ? { proxy: { '/api': { target: 'http://127.0.0.1:8787', changeOrigin: true } } } : undefined,
   build: { outDir: mode === 'artifact' ? 'dist-artifact' : 'dist' },
 }));

@@ -3,13 +3,12 @@
 import type { Api } from './services';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '/api';
-let token: string | null = null;
-export const setToken = (t: string | null) => (token = t);
 
 async function http<T>(method: 'GET' | 'POST' | 'PUT' | 'DELETE', path: string, body?: unknown): Promise<T> {
   const res = await fetch(`${BASE_URL}${path}`, {
     method,
-    headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', ...(method !== 'GET' ? { 'X-EnterG-Request': '1' } : {}) },
     body: body ? JSON.stringify(body) : undefined,
   });
   if (!res.ok) {

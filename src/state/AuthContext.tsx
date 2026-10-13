@@ -1,6 +1,5 @@
 import { createContext, useCallback, useContext, useState, type ReactNode } from 'react';
 import { api } from '@/api';
-import { setToken } from '@/api/http';
 import { LOGIN_TEST_MODE } from '@/api/mode';
 import type { Balance, Player } from '@/api/types';
 
@@ -31,16 +30,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = useCallback(async (u: string, p: string) => {
-    const { player, token } = await api.auth.login(u, p);
-    setToken(token);
+    const { player } = await api.auth.login(u, p);
     setPlayer(player);
     setBalance(LOGIN_TEST_MODE ? null : await api.account.getBalance());
     setModal(null);
   }, []);
 
   const register = useCallback(async (d: Parameters<typeof api.auth.register>[0]) => {
-    const { player, token } = await api.auth.register(d);
-    setToken(token);
+    const { player } = await api.auth.register(d);
     setPlayer(player);
     setBalance(await api.account.getBalance());
     setModal(null);
@@ -48,7 +45,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(async () => {
     await api.auth.logout();
-    setToken(null);
     setPlayer(null);
     setBalance(null);
   }, []);
