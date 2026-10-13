@@ -387,6 +387,7 @@ export const mockApi: Api = {
   },
 
   auth: {
+    getSession: async () => { throw Object.assign(new Error('No demo session'), { status: 401 }); },
     login: async (username, password) => {
       if (!username || password.length < 4) throw new ApiError('INVALID_CREDENTIALS', 'Check your username and password and try again.');
       return delay({ player: { ...state.player, username: username.includes('@') ? state.player.username : username } }, 600);

@@ -4,16 +4,17 @@ import type { Api } from './services';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '/api';
 
-async function http<T>(method: 'GET' | 'POST' | 'PUT' | 'DELETE', path: string, body?: unknown): Promise<T> {
+async function http<T>(method: 'GET' | 'POST' | 'PUT' | 'DELETE', path: string, body?: unknown, signal?: AbortSignal): Promise<T> {
   const res = await fetch(`${BASE_URL}${path}`, {
     method,
+    signal,
     credentials: 'include',
     headers: { 'Content-Type': 'application/json', ...(method !== 'GET' ? { 'X-EnterG-Request': '1' } : {}) },
     body: body ? JSON.stringify(body) : undefined,
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw Object.assign(new Error(err.message ?? `Request failed (${res.status})`), { code: err.code ?? res.status });
+    throw Object.assign(new Error(err.message ?? `Request failed (${res.status})`), { code: err.code ?? res.status, status: res.status });
   }
   return res.json() as Promise<T>;
 }
@@ -53,6 +54,7 @@ export const httpApi: Api = {
     getUpcoming: () => http('GET', '/virtuals/events'),
   },
   auth: {
+    getSession: (signal) => http('GET', '/auth/session', undefined, signal),
     login: (username, password) => http('POST', '/auth/login', { username, password }),
     register: (data) => http('POST', '/auth/register', data),
     logout: () => http('POST', '/auth/logout'),

@@ -64,6 +64,7 @@ export interface VirtualsService {
 }
 
 export interface AuthService {
+  getSession(signal?: AbortSignal): Promise<{ player: Player }>;
   login(username: string, password: string): Promise<{ player: Player }>;
   register(data: { email: string; password: string; firstName: string; lastName: string; dateOfBirth: string; phone: string }): Promise<{ player: Player }>;
   logout(): Promise<void>;

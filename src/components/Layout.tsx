@@ -99,7 +99,7 @@ function AccountMenu() {
 }
 
 export function Header({ onSearch }: { onSearch: () => void }) {
-  const { player, openAuth } = useAuth();
+  const { player, openAuth, restoring, sessionError, retrySession } = useAuth();
   const nav = useNavigate();
   return (
     <header className="header">
@@ -114,7 +114,7 @@ export function Header({ onSearch }: { onSearch: () => void }) {
       <div className="header-actions">
         <button className="icon-btn" onClick={onSearch} aria-label="Search"><Icon name="search" /></button>
         <span className="hide-mobile"><ThemeButton /></span>
-        {player ? (
+        {restoring ? <span role="status">Checking session…</span> : sessionError ? <button className="btn btn-ghost" onClick={retrySession}>Retry session check</button> : player ? (
           <>
             <AccountMenu />
             {!LOGIN_TEST_MODE && <button className="btn btn-primary hide-mobile" onClick={() => nav('/account/deposit')}>Deposit</button>}

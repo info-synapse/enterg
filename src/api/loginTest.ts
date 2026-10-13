@@ -10,7 +10,8 @@ function blocked<T extends object>(service: T): T {
 // Public sample browsing is retained. No fake account data or mutations after real login.
 export const loginTestApi: Api = {
   ...mockApi,
-  auth: { login: httpApi.auth.login, logout: httpApi.auth.logout, register: unavailable },
+  auth: {
+    getSession: httpApi.auth.getSession, login: httpApi.auth.login, logout: httpApi.auth.logout, register: unavailable },
   account: blocked(mockApi.account),
   payments: blocked(mockApi.payments),
   sportsbook: {
