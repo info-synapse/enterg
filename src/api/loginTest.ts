@@ -15,7 +15,7 @@ export const loginTestApi: Api = {
     getSession: httpApi.auth.getSession,
     activity: httpApi.auth.activity, login: httpApi.auth.login, logout: httpApi.auth.logout, register: unavailable },
   account: blocked(mockApi.account),
-  payments: blocked(mockApi.payments),
+  payments: { ...blocked(mockApi.payments), getDepositMethods: httpApi.payments.getDepositMethods },
   sportsbook: {
     ...mockApi.sportsbook, placeBet: unavailable, getBets: unavailable, cashOut: unavailable,
     setAutoCashOut: unavailable, priceBetBuilder: unavailable, shareSlip: unavailable, loadSharedSlip: unavailable,

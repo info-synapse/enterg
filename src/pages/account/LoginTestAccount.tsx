@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { AppFrame } from '@/components/Layout';
 import { useAuth } from '@/state/AuthContext';
 
@@ -16,6 +17,7 @@ export function LoginTestAccount() {
         <p role="status">Login accepted for <strong>{player.username}</strong>.</p>
         <p>Backend user ID: {player.id}</p>
         <p>Profile, balance, KYC and betting are not connected. No balance or verification status is inferred from login.</p>
+        <Link className="btn btn-ghost" to="/account/deposit">View deposit methods</Link>
         <button className="btn btn-ghost" onClick={signOut}>Sign out of this test</button>
       </> : <button className="btn btn-primary" onClick={() => openAuth('login')}>Log in to a backend test account</button>}
       {sessionError && player && <p role="alert">{sessionError}</p>}

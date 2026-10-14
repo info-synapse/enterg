@@ -565,15 +565,15 @@ export const demoLimits: Limit[] = [
 ];
 
 export const paymentMethods: PaymentMethod[] = [
-  { id: 'card', name: 'Debit / credit card', group: 'bank', speed: 'Instant', min: 5, max: 40_000, quickAmounts: [20, 50, 100], savedInstrument: 'Visa •••• 4821' },
-  { id: 'bank-instant', name: 'Instant bank payment', group: 'bank', speed: 'Instant', min: 10, max: 20_000, quickAmounts: [50, 100, 250] },
-  { id: 'iris', name: 'IRIS online payments', group: 'bank', speed: 'Instant', min: 5, max: 10_000, quickAmounts: [20, 50, 100] },
-  { id: 'apple-pay', name: 'Apple Pay', group: 'wallet', speed: 'Instant', min: 5, max: 5_000, quickAmounts: [20, 50, 100] },
-  { id: 'google-pay', name: 'Google Pay', group: 'wallet', speed: 'Instant', min: 5, max: 5_000, quickAmounts: [20, 50, 100] },
-  { id: 'paypal', name: 'PayPal', group: 'wallet', speed: 'Instant', min: 10, max: 10_000, quickAmounts: [20, 50, 100] },
-  { id: 'skrill', name: 'Skrill', group: 'wallet', speed: 'Instant', min: 10, max: 10_000, quickAmounts: [20, 50, 100] },
-  { id: 'paysafecard', name: 'Paysafecard', group: 'cash', speed: 'Usually within 5 minutes', min: 10, max: 1_000, quickAmounts: [10, 25, 50] },
-  { id: 'voucher', name: 'Retail top-up voucher', group: 'cash', speed: 'Instant', min: 5, max: 500, quickAmounts: [10, 20, 50] },
+  { bid: 5001, initiatorId: 18, id: 'card', name: 'Debit / credit card', group: 'bank', speed: 'Instant', min: 5, max: 40_000, quickAmounts: [20, 50, 100], savedInstrument: 'Visa •••• 4821' },
+  { bid: 5002, initiatorId: 18, id: 'bank-instant', name: 'Instant bank payment', group: 'bank', speed: 'Instant', min: 10, max: 20_000, quickAmounts: [50, 100, 250] },
+  { bid: 5003, initiatorId: 18, id: 'iris', name: 'IRIS online payments', group: 'bank', speed: 'Instant', min: 5, max: 10_000, quickAmounts: [20, 50, 100] },
+  { bid: 5004, initiatorId: 18, id: 'apple-pay', name: 'Apple Pay', group: 'wallet', speed: 'Instant', min: 5, max: 5_000, quickAmounts: [20, 50, 100] },
+  { bid: 5005, initiatorId: 18, id: 'google-pay', name: 'Google Pay', group: 'wallet', speed: 'Instant', min: 5, max: 5_000, quickAmounts: [20, 50, 100] },
+  { bid: 5006, initiatorId: 18, id: 'paypal', name: 'PayPal', group: 'wallet', speed: 'Instant', min: 10, max: 10_000, quickAmounts: [20, 50, 100] },
+  { bid: 5007, initiatorId: 18, id: 'skrill', name: 'Skrill', group: 'wallet', speed: 'Instant', min: 10, max: 10_000, quickAmounts: [20, 50, 100] },
+  { bid: 5008, initiatorId: 18, id: 'paysafecard', name: 'Paysafecard', group: 'cash', speed: 'Usually within 5 minutes', min: 10, max: 1_000, quickAmounts: [10, 25, 50] },
+  { bid: 5009, initiatorId: 18, id: 'voucher', name: 'Retail top-up voucher', group: 'cash', speed: 'Instant', min: 5, max: 500, quickAmounts: [10, 20, 50] },
 ];
 
 export const withdrawalMethods: PaymentMethod[] = [

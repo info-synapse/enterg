@@ -1,6 +1,9 @@
-import { useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { api } from '@/api';
+import { LOGIN_TEST_MODE } from '@/api/mode';
+import { AppFrame } from '@/components/Layout';
+import { LoginTestAccount } from './LoginTestAccount';
 import type { PaymentMethod, PaymentResult } from '@/api/types';
 import { Icon } from '@/components/Icon';
 import { dateTime, money } from '@/lib/format';
@@ -21,7 +24,12 @@ function MethodList({ methods, base }: { methods: PaymentMethod[]; base: string 
         <div key={g} className="card" style={{ paddingBlock: 12 }}>
           <div className="group-title">{GROUP_LABEL[g]}</div>
           <div className="list">
-            {methods.filter((m) => m.group === g).map((m) => (
+            {methods.filter((m) => m.group === g).map((m) => LOGIN_TEST_MODE ? (
+              <div key={m.id} className="list-row">
+                <span className="method-icon">{short(m)}</span>
+                <span className="main-col"><span className="t">{m.name}</span><br /><span className="s">{m.speed} · {money(m.min)} – {money(m.max)}</span></span>
+              </div>
+            ) : (
               <Link key={m.id} to={`${base}/${m.id}`} className="list-row">
                 <span className="method-icon">{short(m)}</span>
                 <span className="main-col"><span className="t">{m.name}</span><br /><span className="s">{m.speed} · {money(m.min)} – {money(m.max)}</span></span>
@@ -35,12 +43,65 @@ function MethodList({ methods, base }: { methods: PaymentMethod[]; base: string 
   );
 }
 
+// The external widget posts the deposit to its own backend and then fires
+//   document.dispatchEvent(new CustomEvent('sas_placement1092.deposit-success', { detail: result }))
+// (result.code == 0). The money has already moved, so this only refreshes the balance and
+// navigates (in-app, no reload) to the same success screen PaymentForm shows.
+// The event is listened for on `document` because that is where it is dispatched and it does
+// not bubble up to `window`.
+const SUCCESS_EVENT = 'sas_placement1092.deposit-success';
+const DEPOSIT_METHOD = 'card';
+
+// Injects the external EnterG Pay widget. <script> tags rendered by React never execute,
+// so the script element is created and appended by hand, then removed on unmount.
+function PayWidget() {
+  const nav = useNavigate();
+  const { refreshBalance } = useAuth();
+
+  useEffect(() => {
+    const onSuccess = (e: Event) => {
+      const d = ((e as CustomEvent).detail ?? {}) as Record<string, unknown>;
+      const result: PaymentResult = {
+        status: 'success',
+        transactionId: String(d.transactionId ?? d.transaction_id ?? d.id ?? d.reference ?? '—'),
+        message: String(d.message ?? d.description ?? 'Your deposit was successful.'),
+      };
+      void refreshBalance();
+      nav(`/account/deposit/${DEPOSIT_METHOD}`, { state: { result } });
+    };
+    document.addEventListener(SUCCESS_EVENT, onSuccess);
+
+    const s = document.createElement('script');
+    s.src = 'https://pos.entergaming.im/egpay/DWAD/PLACEMENT_ID=1092?lang=en';
+    s.async = true;
+    document.body.appendChild(s);
+    return () => {
+      s.remove();
+      document.getElementById('sas_placement1092')?.replaceChildren();
+      document.removeEventListener(SUCCESS_EVENT, onSuccess);
+    };
+  }, [nav, refreshBalance]);
+  return <div id="sas_placement1092" />;
+}
+
 export function Deposit() {
-  const { data } = useAsync(() => api.payments.getDepositMethods(), []);
+  const { data, error, reload } = useAsync(() => api.payments.getDepositMethods(), []);
+  const { player, restoring } = useAuth();
+  if (LOGIN_TEST_MODE) {
+    if (!player || restoring) return <LoginTestAccount />;
+    return <AppFrame slipRail={false}>
+      <Link to="/account">Back to account</Link>
+      <h1 className="page-title">Deposit methods</h1>
+      <p className="hint">Sample payment methods. Deposits are not enabled in this test.</p>
+      {error ? <div role="alert">{error} <button className="btn btn-ghost" onClick={reload}>Retry</button></div>
+        : data ? <MethodList methods={data} base="/account/deposit" /> : <p role="status">Loading payment methods…</p>}
+    </AppFrame>;
+  }
   return (
     <AccountFrame>
       <h1 className="page-title">Deposit</h1>
       <p className="hint">Pick how you want to pay. Deposits count towards your deposit limit.</p>
+      <PayWidget />
       {data ? <MethodList methods={data} base="/account/deposit" /> : <div className="skeleton" style={{ height: 300 }} />}
     </AccountFrame>
   );
@@ -90,6 +151,7 @@ export function Withdraw() {
 export function PaymentForm({ kind }: { kind: 'deposit' | 'withdraw' }) {
   const { methodId = '' } = useParams();
   const nav = useNavigate();
+  const location = useLocation();
   const { refreshBalance, balance } = useAuth();
   const methods = useAsync(() => (kind === 'deposit' ? api.payments.getDepositMethods() : api.payments.getWithdrawalMethods()), [kind]);
   const limits = useAsync(() => api.account.getLimits(), []);
@@ -97,7 +159,7 @@ export function PaymentForm({ kind }: { kind: 'deposit' | 'withdraw' }) {
   const [amount, setAmount] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
-  const [result, setResult] = useState<PaymentResult>();
+  const [result, setResult] = useState<PaymentResult | undefined>((location.state as { result?: PaymentResult } | null)?.result);
   const base = kind === 'deposit' ? '/account/deposit' : '/account/withdraw';
   const depositLimit = limits.data?.find((l) => l.kind === 'deposit');
 

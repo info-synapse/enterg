@@ -311,6 +311,9 @@ export interface Transaction {
 /* ---------- Payments ---------- */
 
 export interface PaymentMethod {
+  /** Backend identifiers; not rendered in the payment list. */
+  bid?: number;
+  initiatorId?: number;
   id: string;
   name: string;
   group: 'bank' | 'wallet' | 'cash';
