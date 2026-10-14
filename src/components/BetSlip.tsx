@@ -118,7 +118,7 @@ export function BetSlipPanel({ onClose }: { onClose?: () => void }) {
             <div className="kv"><span>Total stake</span><strong>{money(slip.totalStake)}</strong></div>
             <div className="kv big"><span>Potential return</span><strong>{money(slip.potentialReturn)}</strong></div>
             {slip.error && <div className="alert" role="alert">{slip.error}</div>}
-            {player && balance && slip.totalStake > balance.bettingAvailable && (
+            {player && balance && balance.bettingAvailable !== null && slip.totalStake > balance.bettingAvailable && (
               <div className="alert warn">Your stake is more than your balance of {money(balance.bettingAvailable)}.</div>
             )}
             <button className="btn btn-primary btn-block" disabled={slip.placing || slip.totalStake <= 0 || (slip.mode === 'combo' && slip.conflict)} onClick={slip.place}>

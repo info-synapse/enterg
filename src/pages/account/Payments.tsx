@@ -127,7 +127,7 @@ export function Withdraw() {
   return (
     <AccountFrame>
       <h1 className="page-title">Withdraw</h1>
-      {balance && <div className="alert info">You can withdraw up to <strong>{money(balance.withdrawable)}</strong>. Bonus money of {money(balance.bonus)} can't be withdrawn until wagering is complete.</div>}
+      {balance && <div className="alert info">You can withdraw up to <strong>{money(balance.withdrawable, balance.currency)}</strong>. Bonus money of {money(balance.bonus)} can't be withdrawn until wagering is complete.</div>}
       {pending.length > 0 && (
         <div className="card">
           <h3>Pending withdrawals</h3>

@@ -2,7 +2,7 @@
 // Every screen reads these shapes only, never a vendor's raw payload.
 // When the real back end is connected, the gateway maps each vendor API onto these types.
 
-export type Currency = 'EUR';
+export type Currency = string;
 
 /* ---------- Sportsbook ---------- */
 
@@ -282,8 +282,8 @@ export interface Player {
 export interface Balance {
   currency: Currency;
   total: number;
-  bettingAvailable: number;
-  withdrawable: number;
+  bettingAvailable: number | null;
+  withdrawable: number | null;
   bonus: number;
 }
 

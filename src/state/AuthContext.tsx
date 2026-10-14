@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { api } from '@/api';
-import { LOGIN_TEST_MODE } from '@/api/mode';
+import { HTTP_AUTH_MODE } from '@/api/mode';
 import type { Balance, Player } from '@/api/types';
 
 type AuthModal = 'login' | 'register' | null;
@@ -8,6 +8,8 @@ type AuthModal = 'login' | 'register' | null;
 interface AuthValue {
   player: Player | null;
   balance: Balance | null;
+  balanceLoading: boolean;
+  balanceError: string;
   modal: AuthModal;
   restoring: boolean;
   sessionError: string;
@@ -25,9 +27,12 @@ const Ctx = createContext<AuthValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [player, setPlayer] = useState<Player | null>(null);
   const [balance, setBalance] = useState<Balance | null>(null);
+  const [balanceLoading, setBalanceLoading] = useState(false);
+  const [balanceError, setBalanceError] = useState('');
+  const balanceRequest = useRef(0);
   const [modal, setModal] = useState<AuthModal>(null);
 
-  const [restoring, setRestoring] = useState(LOGIN_TEST_MODE);
+  const [restoring, setRestoring] = useState(HTTP_AUTH_MODE);
   const [sessionError, setSessionError] = useState('');
   const [restoreAttempt, setRestoreAttempt] = useState(0);
   const revision = useRef(0);
@@ -35,7 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const retrySession = useCallback(() => setRestoreAttempt(n => n + 1), []);
 
   useEffect(() => {
-    if (!LOGIN_TEST_MODE) return;
+    if (!HTTP_AUTH_MODE) return;
     const current = ++revision.current;
     const controller = new AbortController();
     const timeout = window.setTimeout(() => controller.abort(), 20000);
@@ -60,7 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [restoreAttempt]);
 
   useEffect(() => {
-    if (!LOGIN_TEST_MODE || !player) return;
+    if (!HTTP_AUTH_MODE || !player) return;
     const controllers = new Set<AbortController>();
     let active = true;
     const onActivity = (event: Event) => {
@@ -93,9 +98,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [player]);
 
   const refreshBalance = useCallback(async () => {
-    if (LOGIN_TEST_MODE) { setBalance(null); return; }
-    setBalance(await api.account.getBalance());
+    const request = ++balanceRequest.current;
+    const current = revision.current;
+    setBalanceLoading(true);
+    setBalanceError('');
+    try {
+      const result = await api.account.getBalance();
+      if (request === balanceRequest.current && current === revision.current) setBalance(result);
+    } catch (error: unknown) {
+      if (request !== balanceRequest.current || current !== revision.current) return;
+      setBalance(null);
+      if ((error as { status?: number })?.status === 401) {
+        ++revision.current;
+        setPlayer(null);
+      } else setBalanceError('Could not load your balance. Please try again.');
+    } finally {
+      if (request === balanceRequest.current) setBalanceLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    setBalance(null);
+    setBalanceError('');
+    if (player) void refreshBalance();
+    else setBalanceLoading(false);
+    return () => { ++balanceRequest.current; };
+  }, [player, refreshBalance]);
 
   const login = useCallback(async (u: string, p: string) => {
     const { player } = await api.auth.login(u, p);
@@ -103,14 +131,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setRestoring(false);
     setSessionError('');
     setPlayer(player);
-    setBalance(LOGIN_TEST_MODE ? null : await api.account.getBalance());
+    setBalance(null);
     setModal(null);
   }, []);
 
   const register = useCallback(async (d: Parameters<typeof api.auth.register>[0]) => {
     const { player } = await api.auth.register(d);
     setPlayer(player);
-    setBalance(await api.account.getBalance());
+    setBalance(null);
     setModal(null);
   }, []);
 
@@ -126,7 +154,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <Ctx.Provider value={{ player, balance, modal, restoring, sessionError, retrySession, openAuth: setModal, login, register, logout, refreshBalance, setPlayer }}>
+    <Ctx.Provider value={{ player, balance, balanceLoading, balanceError, modal, restoring, sessionError, retrySession, openAuth: setModal, login, register, logout, refreshBalance, setPlayer }}>
       {children}
     </Ctx.Provider>
   );

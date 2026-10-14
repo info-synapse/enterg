@@ -19,7 +19,7 @@ export function BalanceCard({ compact }: { compact?: boolean }) {
   const nav = useNavigate();
   const [hidden, setHidden] = useState(false);
   if (!balance) return null;
-  const v = (n: number) => (hidden ? '€ •••' : money(n));
+  const v = (n: number | null) => (hidden ? '€ •••' : money(n, balance.currency));
   return (
     <div className="card">
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -30,9 +30,9 @@ export function BalanceCard({ compact }: { compact?: boolean }) {
       <div className="balance-big">{v(balance.total)}</div>
       {!compact && (
         <>
-          <div className="kv"><span>Available to bet</span><strong>{v(balance.bettingAvailable)}</strong></div>
+          <div className="kv"><span>Cash balance</span><strong>{v(balance.bettingAvailable)}</strong></div>
           <div className="kv"><span>Available to withdraw</span><strong>{v(balance.withdrawable)}</strong></div>
-          <div className="kv"><span>Bonus money</span><strong>{v(balance.bonus)}</strong></div>
+          <div className="kv"><span>Total bonus</span><strong>{v(balance.bonus)}</strong></div>
         </>
       )}
       <div className="row-actions">

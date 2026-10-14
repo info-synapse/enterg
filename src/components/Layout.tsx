@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { api } from '@/api';
-import { LOGIN_TEST_MODE } from '@/api/mode';
+import { WalletBalance } from './WalletBalance';
+import { HTTP_AUTH_MODE, LOGIN_TEST_MODE } from '@/api/mode';
 import type { Competition, Game, Sport, SportEvent } from '@/api/types';
 import { money } from '@/lib/format';
 import { useAuth } from '@/state/AuthContext';
@@ -65,7 +66,7 @@ function AccountMenu() {
     <div ref={ref} style={{ position: 'relative' }}>
       <button className="balance-chip" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-label="Account and balance">
         <span className="avatar">{player.firstName[0]}{player.lastName[0]}</span>
-        <span className="num">{hidden ? '€ •••' : money(balance.total)}</span>
+        <span className="num">{hidden ? '€ •••' : money(balance.total, balance.currency)}</span>
       </button>
       {open && (
         <div className="card" style={{ position: 'absolute', right: 0, top: 46, width: 300, boxShadow: 'var(--shadow)', zIndex: 50 }}>
@@ -74,11 +75,11 @@ function AccountMenu() {
             <div><div style={{ fontWeight: 700 }}>{player.username}</div><div className="hint">Member since {new Date(player.memberSince).getFullYear()}</div></div>
           </div>
           <div style={{ background: 'var(--surface-2)', borderRadius: 'var(--r-md)', padding: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <div className="kv"><span>Balance</span><span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><strong>{hidden ? '•••' : money(balance.total)}</strong>
+            <div className="kv"><span>Balance</span><span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><strong>{hidden ? '•••' : money(balance.total, balance.currency)}</strong>
               <button className="icon-btn" style={{ width: 28, height: 28 }} onClick={() => setHidden((h) => !h)} aria-label={hidden ? 'Show balance' : 'Hide balance'}><Icon name={hidden ? 'eye' : 'eyeOff'} size={16} /></button></span></div>
-            <div className="kv"><span>Available to bet</span><strong>{hidden ? '•••' : money(balance.bettingAvailable)}</strong></div>
-            <div className="kv"><span>Available to withdraw</span><strong>{hidden ? '•••' : money(balance.withdrawable)}</strong></div>
-            <div className="kv"><span>Bonus money</span><strong>{hidden ? '•••' : money(balance.bonus)}</strong></div>
+            <div className="kv"><span>Cash balance</span><strong>{hidden ? '•••' : money(balance.bettingAvailable, balance.currency)}</strong></div>
+            <div className="kv"><span>Available to withdraw</span><strong>{hidden ? '•••' : money(balance.withdrawable, balance.currency)}</strong></div>
+            <div className="kv"><span>Total bonus</span><strong>{hidden ? '•••' : money(balance.bonus, balance.currency)}</strong></div>
           </div>
           <div className="row-actions">
             <button className="btn btn-ghost" onClick={() => go('/account/withdraw')}>Withdraw</button>
@@ -113,6 +114,7 @@ export function Header({ onSearch }: { onSearch: () => void }) {
       </nav>
       {sessionError && player && <span role="alert" className="hint">{sessionError}</span>}
       <div className="header-actions">
+        {HTTP_AUTH_MODE && player && <WalletBalance />}
         <button className="icon-btn" onClick={onSearch} aria-label="Search"><Icon name="search" /></button>
         <span className="hide-mobile"><ThemeButton /></span>
         {restoring ? <span role="status">Checking session…</span> : sessionError && !player ? <button className="btn btn-ghost" onClick={retrySession}>Retry session check</button> : player ? (

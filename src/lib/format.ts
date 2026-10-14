@@ -1,5 +1,5 @@
 const eur = new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR' });
-export const money = (n: number) => eur.format(n);
+export const money = (n: number | null, currency = 'EUR') => n === null ? 'Unavailable' : currency === 'EUR' ? eur.format(n) : new Intl.NumberFormat('en-IE', { style: 'currency', currency }).format(n);
 export const odds = (n: number) => n.toFixed(2);
 
 export function kickoff(iso: string) {

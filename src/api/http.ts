@@ -9,7 +9,7 @@ async function http<T>(method: 'GET' | 'POST' | 'PUT' | 'DELETE', path: string, 
     method,
     signal,
     credentials: 'include',
-    headers: { 'Content-Type': 'application/json', ...(method !== 'GET' ? { 'X-EnterG-Request': '1' } : {}) },
+    headers: { 'Content-Type': 'application/json', 'X-EnterG-Request': '1' },
     body: body ? JSON.stringify(body) : undefined,
   });
   if (!res.ok) {
