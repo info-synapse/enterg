@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '@/api';
-import { LOGIN_TEST_MODE } from '@/api/mode';
+import { BackendProfile } from './BackendProfile';
+import { HTTP_AUTH_MODE, LOGIN_TEST_MODE } from '@/api/mode';
 import type { Bet, Transaction } from '@/api/types';
 import { Icon } from '@/components/Icon';
 import { OpenBetCard } from '@/components/BetCards';
@@ -157,6 +158,10 @@ export function Transactions() {
 }
 
 export function Profile() {
+  return HTTP_AUTH_MODE ? <BackendProfile /> : <DemoProfile />;
+}
+
+function DemoProfile() {
   const { player, setPlayer } = useAuth();
   const [editing, setEditing] = useState<'email' | 'phone' | 'address' | null>(null);
   const [value, setValue] = useState('');

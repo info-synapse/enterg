@@ -14,7 +14,7 @@ export const loginTestApi: Api = {
     getSessionId: httpApi.auth.getSessionId,
     getSession: httpApi.auth.getSession,
     activity: httpApi.auth.activity, login: httpApi.auth.login, logout: httpApi.auth.logout, register: unavailable },
-  account: { ...blocked(mockApi.account), getBalance: httpApi.account.getBalance },
+  account: { ...blocked(mockApi.account), getPlayer: httpApi.account.getPlayer, getBalance: httpApi.account.getBalance },
   payments: { ...blocked(mockApi.payments), getDepositMethods: httpApi.payments.getDepositMethods },
   sportsbook: {
     ...mockApi.sportsbook, placeBet: unavailable, getBets: unavailable, cashOut: unavailable,

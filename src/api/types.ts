@@ -265,7 +265,18 @@ export interface VirtualEvent {
 
 /* ---------- Player account (PAM) ---------- */
 
+export interface PersonalDetails {
+  gender: string; addressLine2: string; postcode: string; countryCode: string; region: string;
+  language: string; landline: string; timezoneOffset: number | null; timezoneName: string;
+  timezoneId: number | null; promoCode: string; promoCodeEditable: boolean;
+  countryOfBirth: string; nationality: string; identityNumber: string; identityType: number | null;
+  resultsEmail: boolean | null; finalScoreUpdates: boolean | null; liveScoreUpdates: boolean | null;
+  resultsSmsPush: boolean | null; contactEmail: boolean | null; weeklyPromotions: boolean | null;
+  dailyPromotions: boolean | null; aiSuggestions: boolean | null; autoFavouriteLeagues: boolean | null;
+}
+
 export interface Player {
+  details?: PersonalDetails;
   id: string;
   username: string;
   firstName: string;

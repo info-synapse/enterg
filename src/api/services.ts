@@ -73,7 +73,7 @@ export interface AuthService {
 }
 
 export interface AccountService {
-  getPlayer(): Promise<Player>;
+  getPlayer(signal?: AbortSignal): Promise<Player>;
   updateContact(field: 'email' | 'phone' | 'address', value: string): Promise<Player>;
   getBalance(): Promise<Balance>;
   getTransactions(q: { type?: Transaction['type']; from?: string; to?: string }): Promise<Transaction[]>;

@@ -22,6 +22,7 @@ export function LoginTestAccount() {
         {balanceError && <p role="alert">{balanceError}</p>}
         <button className="btn btn-ghost" disabled={balanceLoading} onClick={refreshBalance}>Refresh balance</button>
         <p>Profile, KYC and betting are not connected. No balance or verification status is inferred from login.</p>
+        <Link className="btn btn-ghost" to="/account/profile">Personal details</Link>
         <Link className="btn btn-ghost" to="/account/deposit">View deposit methods</Link>
         <button className="btn btn-ghost" onClick={signOut}>Sign out of this test</button>
       </> : <button className="btn btn-primary" onClick={() => openAuth('login')}>Log in to a backend test account</button>}
