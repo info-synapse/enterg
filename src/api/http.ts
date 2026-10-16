@@ -68,8 +68,12 @@ export const httpApi: Api = {
     logout: () => http('POST', '/auth/logout'),
   },
   account: {
+    updateProfile: (changes) => http('PUT', '/account/profile', changes),
     getPlayer: (signal) => http('GET', '/account/profile', undefined, signal),
-    updateContact: (field, value) => http('PUT', '/account/profile', { [field]: value }),
+    updateContact: async (field, value) => {
+      await http('PUT', '/account/profile', { [field]: value });
+      return http('GET', '/account/profile');
+    },
     getBalance: () => http('GET', '/wallet/balance'),
     getTransactions: (q) => http('GET', `/wallet/transactions${qs(q)}`),
     getLimits: () => http('GET', '/rg/limits'),

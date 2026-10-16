@@ -381,3 +381,5 @@ export interface StoryGroup {
   hue: number;
   slides: StorySlide[];
 }
+
+export type ProfileUpdate = Partial<Pick<Player, 'firstName' | 'lastName' | 'email' | 'phone' | 'address' | 'dateOfBirth'> & Omit<PersonalDetails, 'promoCodeEditable'>>;

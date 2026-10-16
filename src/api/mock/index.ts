@@ -404,6 +404,7 @@ export const mockApi: Api = {
   },
 
   account: {
+    updateProfile: async () => { throw new ApiError('NOT_IMPLEMENTED', 'Profile updates use the HTTP gateway.'); },
     getPlayer: () => delay(state.player),
     updateContact: async (field, value) => {
       if (!value.trim()) throw new ApiError('VALIDATION', 'This field cannot be empty.');
