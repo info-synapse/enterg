@@ -18,13 +18,12 @@ export function Overview() {
   const { player } = useAuth();
   const tx = useAsync(() => api.account.getTransactions({}), []);
   const bets = useAsync(() => api.sportsbook.getBets('open'), []);
-  if (LOGIN_TEST_MODE) return <AccountFrame>{null}</AccountFrame>;
   if (!player) return null;
   return (
     <AccountFrame>
       <h1 className="page-title">Hello, {player.firstName}</h1>
       <div className="show-mobile"><BalanceCard /></div>
-      {player.kycStatus !== 'verified' && (
+      {!LOGIN_TEST_MODE && player.kycStatus !== 'verified' && (
         <div className="alert warn" style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
           <Icon name="shield" size={18} />
           <span>Verify your identity to withdraw. It takes about 2 minutes with your ID card.</span>

@@ -1,7 +1,7 @@
 // Service contracts: one interface per back-end domain.
 // The UI only ever calls these. Swapping mock -> real is a one-line change in ./index.ts.
 import type {
-  ProfileUpdate, Balance, Bet, Collection, EventDetail, Game, Jackpot, Limit, LiveTable, PaymentMethod,
+  Bets2Row, BetDetailRow, BetsDesktopQuery, BetsDesktopRow, DepositHistoryQuery, DepositHistoryRow, ProfileUpdate, Balance, Bet, Collection, EventDetail, Game, Jackpot, Limit, LiveTable, PaymentMethod,
   PaymentResult, PlaceBetRequest, Player, Promo, Provider, Sport, SportEvent, Transaction,
   VirtualEvent, VirtualLeague, Competition, CasinoFilterOptions, StoryGroup, SlipSelection, MicroMarket, Rewards,
 } from './types';
@@ -73,6 +73,10 @@ export interface AuthService {
 }
 
 export interface AccountService {
+  getBetDetails(id: string, signal?: AbortSignal): Promise<BetDetailRow[]>;
+  getBets2(query: BetsDesktopQuery, signal?: AbortSignal): Promise<Bets2Row[]>;
+  getBetsDesktop(query: BetsDesktopQuery, signal?: AbortSignal): Promise<BetsDesktopRow[]>;
+  getDeposits(query: DepositHistoryQuery, signal?: AbortSignal): Promise<DepositHistoryRow[]>;
   updateProfile(changes: ProfileUpdate): Promise<{ saved: true }>;
   getPlayer(signal?: AbortSignal): Promise<Player>;
   updateContact(field: 'email' | 'phone' | 'address', value: string): Promise<Player>;

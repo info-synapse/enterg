@@ -56,7 +56,6 @@ function AccountMenu() {
     document.addEventListener('mousedown', close);
     return () => document.removeEventListener('mousedown', close);
   }, []);
-  if (LOGIN_TEST_MODE && player) return <Link className="btn btn-ghost" to="/account">Signed in: {player.username}</Link>;
   if (!player || !balance) return null;
   const go = (to: string) => {
     setOpen(false);
@@ -65,13 +64,13 @@ function AccountMenu() {
   return (
     <div ref={ref} style={{ position: 'relative' }}>
       <button className="balance-chip" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-label="Account and balance">
-        <span className="avatar">{player.firstName[0]}{player.lastName[0]}</span>
+        <span className="avatar">{player.firstName?.[0]}{player.lastName?.[0]}</span>
         <span className="num">{hidden ? '€ •••' : money(balance.total, balance.currency)}</span>
       </button>
       {open && (
         <div className="card" style={{ position: 'absolute', right: 0, top: 46, width: 300, boxShadow: 'var(--shadow)', zIndex: 50 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span className="avatar" style={{ width: 40, height: 40 }}>{player.firstName[0]}{player.lastName[0]}</span>
+            <span className="avatar" style={{ width: 40, height: 40 }}>{player.firstName?.[0]}{player.lastName?.[0]}</span>
             <div><div style={{ fontWeight: 700 }}>{player.username}</div><div className="hint">Member since {new Date(player.memberSince).getFullYear()}</div></div>
           </div>
           <div style={{ background: 'var(--surface-2)', borderRadius: 'var(--r-md)', padding: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -245,7 +244,7 @@ export function Footer() {
         <Link to="/account/protection">Safer gambling</Link><span>Terms and conditions</span><span>Privacy policy</span><span>Payments</span><span>Help centre</span><span>Licence information</span>
       </div>
       <div className="footer-appearance"><span>Appearance</span><ThemeChoice /></div>
-      <span>{LOGIN_TEST_MODE ? 'Login test: backend authentication only. Sports content is sample data; wallet and wagering are disabled.' : 'Prototype build with sample data. No real money is used.'}</span>
+      <span>{LOGIN_TEST_MODE ? 'Mixed mode: connected account screens use backend data. Other content is sample data; unimplemented actions are disabled.' : 'Prototype build with sample data. No real money is used.'}</span>
     </footer>
   );
 }
@@ -263,7 +262,7 @@ export function AppFrame({ children, left, slipRail = true }: { children: ReactN
   const shellCls = left ? 'shell' : slipRail ? 'shell no-left' : 'shell full';
   return (
     <>
-      <div className="demo-banner">{LOGIN_TEST_MODE ? 'Login test · use a backend test account · sample sports data · wallet and wagering disabled' : 'Prototype with sample data · log in with any username and a password of 4+ characters'}</div>
+      <div className="demo-banner">{LOGIN_TEST_MODE ? 'Mixed mode · backend account login · sample sports/casino content' : 'Prototype with sample data · log in with any username and a password of 4+ characters'}</div>
       <Header onSearch={() => setSearch(true)} />
       <div className={shellCls}>
         {left}

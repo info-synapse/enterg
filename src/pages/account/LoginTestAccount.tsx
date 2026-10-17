@@ -24,6 +24,7 @@ export function LoginTestAccount() {
         <p>Profile, KYC and betting are not connected. No balance or verification status is inferred from login.</p>
         <Link className="btn btn-ghost" to="/account/profile">Personal details</Link>
         <Link className="btn btn-ghost" to="/account/deposit">View deposit methods</Link>
+        <h2>History</h2><Link className="btn btn-ghost" to="/account/bets-pro">Bets Pro/VIP</Link><Link className="btn btn-ghost" to="/account/deposits">Deposits</Link>
         <button className="btn btn-ghost" onClick={signOut}>Sign out of this test</button>
       </> : <button className="btn btn-primary" onClick={() => openAuth('login')}>Log in to a backend test account</button>}
       {sessionError && player && <p role="alert">{sessionError}</p>}

@@ -68,6 +68,10 @@ export const httpApi: Api = {
     logout: () => http('POST', '/auth/logout'),
   },
   account: {
+    getBetDetails: (id, signal) => http('GET', `/account/bet-details${qs({ id })}`, undefined, signal),
+    getBets2: (query, signal) => http('GET', `/account/bets2${qs({ ...query })}`, undefined, signal),
+    getBetsDesktop: (query, signal) => http('GET', `/account/bets-desktop${qs({ ...query })}`, undefined, signal),
+    getDeposits: (query, signal) => http('GET', `/account/deposits${qs({ ...query })}`, undefined, signal),
     updateProfile: (changes) => http('PUT', '/account/profile', changes),
     getPlayer: (signal) => http('GET', '/account/profile', undefined, signal),
     updateContact: async (field, value) => {

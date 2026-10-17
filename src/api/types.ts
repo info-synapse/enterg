@@ -383,3 +383,16 @@ export interface StoryGroup {
 }
 
 export type ProfileUpdate = Partial<Pick<Player, 'firstName' | 'lastName' | 'email' | 'phone' | 'address' | 'dateOfBirth'> & Omit<PersonalDetails, 'promoCodeEditable'>>;
+
+export interface DepositHistoryQuery { from: string; to: string; status: 'all' | 'pending' | 'processed' }
+export interface DepositHistoryRow { createdAt: string; amount: number; currency: string; transactionId: string; status: number; statusText: string; processedAt: string; paymentMethod: string }
+
+export interface Bets2Row extends BetsDesktopRow { selections: BetDetailRow[] }
+export interface BetsDesktopQuery { from: string; to: string }
+export interface BetsDesktopRow { id: string; placedAt: string; stake: number | null; system: string; lines: number | null; maxPayout: number | null; payout: number | null; final: number | null; refund: number | null; betType: number | null; bonus: number | null; bonusFactor: number | null; safeBet: number | null; odds: number | null; tax: number | null; maxTax: number | null }
+
+export interface BetDetailRow {
+ sport: string; sportImage: string; tournament: string; startsAt: string; home: string; away: string;
+ market: string; selection: string; odds: number | null; final: number | null; hit: number | null;
+ betType: number | null; result: string; group: string; forecastCode: number | null; parameter: number | null;
+}

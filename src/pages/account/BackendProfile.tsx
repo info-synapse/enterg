@@ -1,12 +1,8 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { Link } from 'react-router-dom';
 import { api } from '@/api';
 import type { Player, ProfileUpdate } from '@/api/types';
 import { useAuth } from '@/state/AuthContext';
-import { AppFrame } from '@/components/Layout';
 import { AccountFrame } from './AccountFrame';
-import { LOGIN_TEST_MODE } from '@/api/mode';
-import { LoginTestAccount } from './LoginTestAccount';
 
 type Key = keyof ProfileUpdate;
 const groups: { title: string; fields: [Key, string, number?][] }[] = [
@@ -76,7 +72,7 @@ export function BackendProfile() {
       }
     } finally { if (generation.current === id) { saveLock.current = false; setSaving(false); } }
   }
-  if (!player || restoring) return LOGIN_TEST_MODE ? <LoginTestAccount /> : <AccountFrame><p role="status">Checking your account…</p></AccountFrame>;
+  if (!player || restoring) return <AccountFrame><p role="status">Checking your account…</p></AccountFrame>;
   const content = <>
     <h1 className="page-title">Personal details</h1>
     <button className="btn btn-ghost" disabled={loading || saving || dirty} onClick={() => setAttempt(n => n + 1)}>Refresh personal details</button>
@@ -105,5 +101,5 @@ export function BackendProfile() {
       </fieldset>
     </form>}
   </>;
-  return LOGIN_TEST_MODE ? <AppFrame slipRail={false}><Link to="/account">Back to account</Link>{content}</AppFrame> : <AccountFrame>{content}</AccountFrame>;
+  return <AccountFrame>{content}</AccountFrame>;
 }

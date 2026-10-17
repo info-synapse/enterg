@@ -2,8 +2,6 @@ import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { api } from '@/api';
 import { LOGIN_TEST_MODE } from '@/api/mode';
-import { AppFrame } from '@/components/Layout';
-import { LoginTestAccount } from './LoginTestAccount';
 import type { PaymentMethod, PaymentResult } from '@/api/types';
 import { Icon } from '@/components/Icon';
 import { dateTime, money } from '@/lib/format';
@@ -86,23 +84,12 @@ function PayWidget() {
 
 export function Deposit() {
   const { data, error, reload } = useAsync(() => api.payments.getDepositMethods(), []);
-  const { player, restoring } = useAuth();
-  if (LOGIN_TEST_MODE) {
-    if (!player || restoring) return <LoginTestAccount />;
-    return <AppFrame slipRail={false}>
-      <Link to="/account">Back to account</Link>
-      <h1 className="page-title">Deposit methods</h1>
-      <p className="hint">Sample payment methods. Deposits are not enabled in this test.</p>
-      {error ? <div role="alert">{error} <button className="btn btn-ghost" onClick={reload}>Retry</button></div>
-        : data ? <MethodList methods={data} base="/account/deposit" /> : <p role="status">Loading payment methods…</p>}
-    </AppFrame>;
-  }
   return (
     <AccountFrame>
       <h1 className="page-title">Deposit</h1>
-      <p className="hint">Pick how you want to pay. Deposits count towards your deposit limit.</p>
-      <PayWidget />
-      {data ? <MethodList methods={data} base="/account/deposit" /> : <div className="skeleton" style={{ height: 300 }} />}
+      <p className="hint">{LOGIN_TEST_MODE ? 'Sample payment methods loaded from the gateway. Deposits are not enabled in mixed mode.' : 'Pick how you want to pay. Deposits count towards your deposit limit.'}</p>
+      {!LOGIN_TEST_MODE && <PayWidget />}
+      {error ? <p role="alert">{error} <button className="btn btn-ghost" onClick={reload}>Retry</button></p> : data ? <MethodList methods={data} base="/account/deposit" /> : <div className="skeleton" style={{ height: 300 }} />}
     </AccountFrame>
   );
 }
@@ -178,6 +165,7 @@ export function PaymentForm({ kind }: { kind: 'deposit' | 'withdraw' }) {
     }
   };
 
+  if (LOGIN_TEST_MODE) return <AccountFrame><p>Payments are not connected in mixed mode.</p><Link to={base}>Back to methods</Link></AccountFrame>;
   if (!m) return <AccountFrame><div className="skeleton" style={{ height: 320 }} /></AccountFrame>;
   const valid = amount >= m.min && amount <= m.max && (kind === 'deposit' || amount <= (balance?.withdrawable ?? 0));
 

@@ -1,3 +1,6 @@
+import { Bets2 } from '@/pages/account/Bets2';
+import { BetsPro } from '@/pages/account/BetsPro';
+import { Deposits } from '@/pages/account/Deposits';
 import { HashRouter, Link, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from '@/state/AuthContext';
 import { BetSlipProvider } from '@/state/BetSlipContext';
@@ -58,7 +61,11 @@ export default function App() {
                 <Route path="/account/deposit/:methodId" element={<PaymentForm kind="deposit" />} />
                 <Route path="/account/withdraw" element={<Withdraw />} />
                 <Route path="/account/withdraw/:methodId" element={<PaymentForm kind="withdraw" />} />
+                <Route path="/account/bets2" element={<Bets2 />} />
+                <Route path="/account/bets-pro" element={<BetsPro />} />
+                <Route path="/account/bets-desktop" element={<BetsPro />} />
                 <Route path="/account/bets" element={<BetHistory />} />
+                <Route path="/account/deposits" element={<Deposits />} />
                 <Route path="/account/transactions" element={<Transactions />} />
                 <Route path="/account/profile" element={<Profile />} />
                 <Route path="/account/protection" element={<Protection />} />

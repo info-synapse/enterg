@@ -404,6 +404,10 @@ export const mockApi: Api = {
   },
 
   account: {
+    getBetDetails: () => delay([]),
+    getBets2: () => delay([]),
+    getBetsDesktop: () => delay([]),
+    getDeposits: () => delay([]),
     updateProfile: async () => { throw new ApiError('NOT_IMPLEMENTED', 'Profile updates use the HTTP gateway.'); },
     getPlayer: () => delay(state.player),
     updateContact: async (field, value) => {

@@ -1,0 +1,17 @@
+.table.bets-pro > thead > tr > th,
+.table.bets-pro > tbody > tr > td,
+.table.bets-pro > tfoot > tr > th,
+.table.bets-pro > tfoot > tr > td { text-align: center; }
+.table.bets-pro > thead > tr > th:is(:nth-child(3), :nth-child(6), :nth-child(7), :nth-child(10), :nth-child(12), :nth-child(13)),
+.table.bets-pro > tbody > tr > td:is(:nth-child(3), :nth-child(6), :nth-child(7), :nth-child(10), :nth-child(12), :nth-child(13)),
+.table.bets-pro > tfoot > tr > td:first-of-type { text-align: right; }
+.coupon-details { border: 3px solid var(--line); border-radius: 6px; box-shadow: var(--shadow); background: var(--surface); color: var(--ink); padding: 12px; overflow-x: auto; text-align: center; }
+.coupon-summary { display: grid; grid-template-columns: repeat(2, minmax(220px, 1fr)); gap: 8px 24px; margin: 0 0 16px; }
+.coupon-summary > div { display: flex; justify-content: space-between; gap: 12px; }
+.coupon-summary dt { font-weight: 600; }
+.coupon-summary dd { margin: 0; }
+.coupon-selections { width: 100%; border-collapse: collapse; }
+.coupon-selections th, .coupon-selections td { text-align: center; padding: 6px; border-bottom: 1px solid var(--line); }
+.coupon-selections tbody tr { background: var(--surface-2); color: var(--ink); }
+.coupon-selections tbody tr:nth-child(odd) { background: var(--surface-3); }
+.coupon-selections td:nth-child(9) { text-align: right; }
