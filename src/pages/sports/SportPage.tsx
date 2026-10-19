@@ -1,7 +1,8 @@
 // Pre-match sport page: Highlights · Competitions · Coupon, plus the single-competition page.
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Link, NavLink, Navigate, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { api } from '@/api';
+import { sportsPageApi as api, isBackendSport } from '@/lib/backendSports';
+import { CatalogIcon } from '@/components/CatalogIcon';
 import type { Competition } from '@/api/types';
 import { EventList, ListSkeleton } from '@/components/EventRow';
 import { Icon } from '@/components/Icon';
@@ -17,7 +18,7 @@ type Tab = 'highlights' | 'competitions' | 'coupon';
 
 /** Sport switcher. On mobile it starts with "Sports A–Z" (the full list); desktop has that list in the left rail. */
 function SportStrip({ active }: { active: string }) {
-  const { sports } = useSportsNav();
+  const { sports } = useSportsNav(isBackendSport(active));
   return (
     <nav className="sport-strip" aria-label="Choose a sport">
       <NavLink to="/sports" className={`show-mobile ${active === 'az' ? 'active' : ''}`} aria-current={active === 'az' ? 'page' : undefined}>
@@ -26,7 +27,7 @@ function SportStrip({ active }: { active: string }) {
       </NavLink>
       {sports.map((s) => (
         <NavLink key={s.id} to={`/sport/${s.id}`} className={s.id === active ? 'active' : ''}>
-          <Icon name={s.icon} size={30} />
+          <CatalogIcon url={s.iconUrl} icon={s.icon} size={30} />
           {s.name}
         </NavLink>
       ))}
@@ -45,6 +46,7 @@ function SportTabs({ sportId, tab }: { sportId: string; tab: Tab }) {
 }
 
 function MarketTabs({ sportId, value, onChange }: { sportId: string; value: string; onChange: (m: string) => void }) {
+  if (isBackendSport(sportId)) return null;
   return (
     <div className="tabs" role="tablist" aria-label="Market shown in the odds columns">
       {marketsFor(sportId).map((m) => (
@@ -67,7 +69,7 @@ function StarButton({ id, name }: { id: string; name: string }) {
 function CompChip({ c }: { c: Competition }) {
   return (
     <Link to={`/sport/${c.sportId}/competition/${c.id}`} className="comp-chip">
-      <Flag region={c.region} />{c.name}
+      <CatalogIcon url={c.iconUrl} region={c.region} />{c.name}
     </Link>
   );
 }
@@ -86,20 +88,22 @@ function CompTabs({ children, activeKey }: { children: ReactNode; activeKey: str
 export function SportPage() {
   const { sportId = 'football', tab = 'highlights' } = useParams();
   const [params] = useSearchParams();
-  const { sports } = useSportsNav();
+  const { sports, loading, error, reload } = useSportsNav(isBackendSport(sportId));
   // Old links like /sport/football?c=gr-sl go to the competition page.
   const legacy = params.get('c');
   if (legacy && tab === 'highlights') return <Navigate replace to={`/sport/${sportId}/competition/${legacy}`} />;
   const t = (['highlights', 'competitions', 'coupon'].includes(tab) ? tab : 'highlights') as Tab;
   const sport = sports.find((s) => s.id === sportId);
+  if (isBackendSport(sportId) && (loading || error || !sport)) return <SportsFrame>{loading ? <p role="status">Loading sport…</p> : error ? <p role="alert">Could not load sports and competitions. <button className="btn btn-ghost" onClick={reload}>Retry</button></p> : <p>Sport not found.</p>}</SportsFrame>;
   return (
     <SportsFrame>
       <SportStrip active={sportId} />
       <h1 className="page-title">{sport?.name ?? ''}</h1>
       <SportTabs sportId={sportId} tab={t} />
-      {t === 'highlights' && <Highlights sportId={sportId} />}
-      {t === 'competitions' && <Competitions sportId={sportId} />}
-      {t === 'coupon' && <Coupon sportId={sportId} />}
+      {isBackendSport(sportId) && <p className="hint">Backend competitions · Event listings and odds are not connected yet.</p>}
+      {t === 'highlights' && <Highlights key={sportId} sportId={sportId} />}
+      {t === 'competitions' && <Competitions key={sportId} sportId={sportId} />}
+      {t === 'coupon' && <Coupon key={sportId} sportId={sportId} />}
     </SportsFrame>
   );
 }
@@ -133,14 +137,14 @@ function Highlights({ sportId }: { sportId: string }) {
       )}
       <section className="section">
         <MarketTabs sportId={sportId} value={market} onChange={setMarket} />
-        {loading ? <ListSkeleton rows={6} /> : <EventList events={shown} groupBy="day" emptyText="No upcoming matches in this sport." />}
+        {loading ? <ListSkeleton rows={6} /> : <EventList events={shown} groupBy="day" emptyText={isBackendSport(sportId) ? 'Backend event listings are not connected yet.' : 'No upcoming matches in this sport.'} />}
         {ranked.length > limit && <button className="btn btn-ghost" style={{ alignSelf: 'center' }} onClick={() => setLimit((l) => l + 14)}>Show more matches</button>}
       </section>
       <section className="section">
         <div className="section-head"><h2>Coupons</h2><Link className="more" to={`/sport/${sportId}/coupon`}>Open coupon</Link></div>
         <div className="shortcuts">
           {windows.map((w) => (
-            <Link key={w.id} to={`/sport/${sportId}/coupon?w=${w.id}`} className="shortcut"><Icon name="history" size={18} />{w.id === 'today' ? "Today's matches" : `Next ${w.label}`}<span className="n num">{countIn(w)}</span></Link>
+            <Link key={w.id} to={`/sport/${sportId}/coupon?w=${w.id}`} className="shortcut"><Icon name="history" size={18} />{w.id === 'today' ? "Today's matches" : `Next ${w.label}`}{!isBackendSport(sportId) && <span className="n num">{countIn(w)}</span>}</Link>
           ))}
         </div>
       </section>
@@ -154,7 +158,7 @@ function Competitions({ sportId }: { sportId: string }) {
   const nav = useNavigate();
   const location = useLocation();
   const preset = (location.state as { select?: string[] } | null)?.select;
-  const { data, loading } = useAsync(() => api.sportsbook.getCompetitions(sportId), [sportId]);
+  const { data, loading, error, reload } = useAsync(() => api.sportsbook.getCompetitions(sportId), [sportId]);
   const fav = useFavourites();
   const [multi, setMulti] = useState(!!preset?.length);
   const [selected, setSelected] = useState<string[]>(preset ?? []);
@@ -180,7 +184,7 @@ function Competitions({ sportId }: { sportId: string }) {
   const toggleIn = (setter: typeof setOpenGroups, key: string) => setter((s) => (s.includes(key) ? s.filter((x) => x !== key) : [...s, key]));
 
   const term = q.trim().toLowerCase();
-  const matches = term ? all.filter((c) => `${c.name} ${c.region}`.toLowerCase().includes(term)) : [];
+  const matches = term ? all.filter((c) => `${c.name} ${c.region} ${c.shortName ?? ''}`.toLowerCase().includes(term)) : [];
   const mine = all.filter((c) => fav.isFav(c.id));
   const popular = all.filter((c) => c.featured);
 
@@ -193,11 +197,11 @@ function Competitions({ sportId }: { sportId: string }) {
           {multi ? (
             <span className={`check ${on ? 'on' : ''}`} aria-hidden="true">{on && <Icon name="check" size={14} strokeWidth={3} />}</span>
           ) : (
-            <Flag region={c.region} size={24} />
+            <CatalogIcon url={c.iconUrl} region={c.region} size={24} />
           )}
           <span className="tile-text">
             <span className="tile-name">{c.name}</span>
-            <span className="tile-sub num">{inCountry ? '' : `${c.region} · `}{c.eventCount ? `${c.eventCount} ${c.eventCount === 1 ? 'match' : 'matches'}` : 'No matches yet'}</span>
+            <span className="tile-sub num">{inCountry || !c.region ? '' : `${c.region}${c.eventCount === undefined ? '' : ' · '}`}{c.eventCount === undefined ? '' : c.eventCount ? `${c.eventCount} ${c.eventCount === 1 ? 'match' : 'matches'}` : 'No matches yet'}</span>
           </span>
         </button>
         <StarButton id={c.id} name={c.name} />
@@ -216,7 +220,7 @@ function Competitions({ sportId }: { sportId: string }) {
       </div>
       {multi && <p className="hint">Tick the leagues you want, then show their matches together on one coupon.</p>}
 
-      {loading ? <div className="skeleton" style={{ height: 320 }} /> : term ? (
+      {error ? <p role="alert">Could not load competitions. <button className="btn btn-ghost" onClick={reload}>Retry</button></p> : loading ? <div className="skeleton" style={{ height: 320 }} /> : term ? (
         <div>
           {matches.length ? <div className="comp-grid">{matches.map((c) => renderTile(c))}</div> : <div className="empty">No league matches “{q}”.</div>}
         </div>
@@ -236,7 +240,8 @@ function Competitions({ sportId }: { sportId: string }) {
               {GROUP_ORDER.filter((g) => all.some((c) => c.group === g)).map((g) => {
                 const inGroup = all.filter((c) => c.group === g);
                 const areaComps = inGroup.filter((c) => AREA_REGIONS.has(c.region));
-                const countries = [...new Set(inGroup.filter((c) => !AREA_REGIONS.has(c.region)).map((c) => c.region))];
+                const withoutCountry = inGroup.filter((c) => !c.region);
+                const countries = [...new Set(inGroup.filter((c) => c.region && !AREA_REGIONS.has(c.region)).map((c) => c.region))];
                 const gOpen = openGroups.includes(g);
                 return (
                   <div key={g} className={`browser-group ${gOpen ? 'open' : ''}`}>
@@ -258,6 +263,7 @@ function Competitions({ sportId }: { sportId: string }) {
                         </div>
                       );
                     })}
+                    {gOpen && withoutCountry.length > 0 && <div className="comp-grid in-country">{withoutCountry.map((c) => renderTile(c))}</div>}
                   </div>
                 );
               })}
@@ -343,13 +349,13 @@ function Coupon({ sportId }: { sportId: string }) {
       {tabIds.length > 1 && (
         <CompTabs activeKey={focus ?? 'all'}>
           <button role="tab" aria-selected={!focus} className={`comp-tab ${!focus ? 'active' : ''}`} onClick={() => setParam('f', null)}>
-            <Icon name={sportId === 'football' ? 'football' : 'sports'} size={18} />All<span className="n num">{events.length}</span>
+            <Icon name={sportId === 'football' ? 'football' : 'sports'} size={18} />All{!isBackendSport(sportId) && <span className="n num">{events.length}</span>}
           </button>
           {tabIds.map((id) => {
             const c = compOf(id);
             return (
               <button key={id} role="tab" aria-selected={focus === id} className={`comp-tab ${focus === id ? 'active' : ''}`} onClick={() => setParam('f', id)}>
-                <Flag region={c?.region ?? ''} size={18} />{c?.name ?? id}<span className="n num">{counts.get(id) ?? 0}</span>
+                <CatalogIcon url={c?.iconUrl} region={c?.region} size={18} />{c?.name ?? id}{!isBackendSport(sportId) && <span className="n num">{counts.get(id) ?? 0}</span>}
               </button>
             );
           })}
@@ -367,14 +373,14 @@ function Coupon({ sportId }: { sportId: string }) {
           <button className={sort === 'top' ? 'active' : ''} onClick={() => setSort('top')}>Top competitions</button>
           <button className={sort === 'time' ? 'active' : ''} onClick={() => setSort('time')}>Kick-off time</button>
         </div>
-        <span className="hint num" style={{ marginLeft: 'auto' }}>{loading ? '' : `${shown.length} matches`}</span>
+        <span className="hint num" style={{ marginLeft: 'auto' }}>{loading || isBackendSport(sportId) ? '' : `${shown.length} matches`}</span>
       </div>
       <MarketTabs sportId={sportId} value={market} onChange={setMarket} />
       {loading ? <ListSkeleton rows={8} /> : (
         <EventList
           events={shown}
           groupBy={focus ? 'day' : sort === 'top' ? 'competition' : 'time'}
-          emptyText={leagues.length ? 'No matches for these leagues in this window. Try All dates.' : 'No matches in this window. Pick a longer one.'}
+          emptyText={isBackendSport(sportId) ? 'Backend event listings are not connected yet.' : leagues.length ? 'No matches for these leagues in this window. Try All dates.' : 'No matches in this window. Pick a longer one.'}
         />
       )}
     </>
@@ -388,13 +394,14 @@ export function CompetitionPage() {
   const comps = useAsync(() => api.sportsbook.getCompetitions(sportId), [sportId]);
   const comp = comps.data?.find((c) => c.id === compId);
   const [market, setMarket] = useState(marketsFor(sportId)[0]);
-  const { data, loading } = useAsync(() => api.sportsbook.getEvents({ competitionId: compId, live: false, marketName: market }), [compId, market]);
-  const live = useAsync(() => api.sportsbook.getEvents({ competitionId: compId, live: true }), [compId]);
+  const { data, loading } = useAsync(() => api.sportsbook.getEvents({ sportId, competitionId: compId, live: false, marketName: market }), [compId, market]);
+  const live = useAsync(() => api.sportsbook.getEvents({ sportId, competitionId: compId, live: true }), [compId]);
+  if (isBackendSport(sportId) && (comps.loading || comps.error || !comp)) return <SportsFrame>{comps.loading ? <p>Loading competition…</p> : comps.error ? <p role="alert">Could not load competitions. <button onClick={comps.reload}>Retry</button></p> : <p>Competition not found for this sport.</p>}</SportsFrame>;
   return (
     <SportsFrame>
       <nav style={{ display: 'flex', alignItems: 'center', gap: 8 }} aria-label="Breadcrumb">
         <Link to={`/sport/${sportId}/competitions`} className="icon-btn" aria-label="Back to competitions"><Icon name="chevronLeft" /></Link>
-        {comp && <Flag region={comp.region} size={28} />}
+        {comp && <CatalogIcon url={comp.iconUrl} region={comp.region} size={28} />}
         <div style={{ minWidth: 0 }}>
           <h1 className="page-title">{comp?.name ?? ''}</h1>
           <span className="hint">{comp?.region}</span>
@@ -410,7 +417,7 @@ export function CompetitionPage() {
       )}
       <section className="section">
         <MarketTabs sportId={sportId} value={market} onChange={setMarket} />
-        {loading ? <ListSkeleton /> : <EventList events={data ?? []} groupBy="day" emptyText="No upcoming matches in this competition yet." />}
+        {loading ? <ListSkeleton /> : <EventList events={data ?? []} groupBy="day" emptyText={isBackendSport(sportId) ? 'Backend event listings are not connected yet.' : 'No upcoming matches in this competition yet.'} />}
       </section>
     </SportsFrame>
   );
@@ -421,13 +428,13 @@ function CompetitionSwitcher({ sportId, current }: { sportId: string; current: s
   const comps = useAsync(() => api.sportsbook.getCompetitions(sportId), [sportId]);
   const fav = useFavourites();
   const list = (comps.data ?? []).filter((c) => fav.isFav(c.id) || c.featured || c.id === current);
-  list.sort((a, b) => Number(fav.isFav(b.id)) - Number(fav.isFav(a.id)) || GROUP_ORDER.indexOf(a.group) - GROUP_ORDER.indexOf(b.group));
+  list.sort((a, b) => Number(fav.isFav(b.id)) - Number(fav.isFav(a.id)) || (isBackendSport(sportId) ? (a.displayOrder ?? 0) - (b.displayOrder ?? 0) : GROUP_ORDER.indexOf(a.group) - GROUP_ORDER.indexOf(b.group)));
   if (list.length < 2) return null;
   return (
     <CompTabs activeKey={current}>
       {list.map((c) => (
         <Link key={c.id} role="tab" aria-selected={c.id === current} className={`comp-tab ${c.id === current ? 'active' : ''}`} to={`/sport/${sportId}/competition/${c.id}`} replace>
-          <Flag region={c.region} size={18} />{c.name}{fav.isFav(c.id) && <Icon name="star" size={13} />}
+          <CatalogIcon url={c.iconUrl} region={c.region} size={18} />{c.name}{fav.isFav(c.id) && <Icon name="star" size={13} />}
         </Link>
       ))}
       <Link className="comp-tab more" to={`/sport/${sportId}/competitions`}>All competitions<Icon name="chevronRight" size={14} /></Link>

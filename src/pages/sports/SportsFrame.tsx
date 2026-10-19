@@ -1,16 +1,16 @@
-import { useEffect, useState, type ReactNode } from 'react';
-import { api } from '@/api';
-import type { Competition, Sport } from '@/api/types';
+import { type ReactNode } from 'react';
+import { mockApi } from '@/api/mock';
+import { useAsync } from '@/lib/useAsync';
+import { loadBackendCatalog } from '@/lib/backendSports';
 import { AppFrame, LeftNav } from '@/components/Layout';
 
-let cache: Promise<[Sport[], Competition[]]> | null = null;
-export function useSportsNav() {
-  const [data, setData] = useState<[Sport[], Competition[]]>([[], []]);
-  useEffect(() => {
-    cache ??= Promise.all([api.sportsbook.getSports(), api.sportsbook.getCompetitions()]);
-    cache.then(setData);
-  }, []);
-  return { sports: data[0], competitions: data[1] };
+export function useSportsNav(backend = false) {
+  const result = useAsync(async () => {
+    if (backend) return loadBackendCatalog();
+    const [sports, competitions] = await Promise.all([mockApi.sportsbook.getSports(), mockApi.sportsbook.getCompetitions()]);
+    return { sports, competitions };
+  }, [backend]);
+  return { sports: result.data?.sports ?? [], competitions: result.data?.competitions ?? [], loading: result.loading, error: result.error, reload: result.reload };
 }
 
 export function SportsFrame({ children }: { children: ReactNode }) {

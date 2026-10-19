@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { api } from '@/api';
 import { loadMainGameForecasts } from '@/lib/mainGameForecasts';
+import { BackendSportsMenu } from './BackendSportsMenu';
 import { WalletBalance } from './WalletBalance';
 import { HTTP_AUTH_MODE, LOGIN_TEST_MODE } from '@/api/mode';
 import type { Competition, Game, Sport, SportEvent } from '@/api/types';
@@ -164,6 +165,7 @@ export function LeftNav({ sports, competitions }: { sports: Sport[]; competition
           <NavLink key={s.id} to={`/sport/${s.id}`}><Icon name={s.icon} size={18} />{s.name}{s.liveCount > 0 && <span className="count num">{s.liveCount}</span>}</NavLink>
         ))}
       </div>
+    <BackendSportsMenu />
     </aside>
   );
 }

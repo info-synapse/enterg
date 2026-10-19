@@ -7,6 +7,7 @@ export type Currency = string;
 /* ---------- Sportsbook ---------- */
 
 export interface Sport {
+  backendId?: number; iconUrl?: string; displayOrder?: number;
   id: string;
   name: string;
   icon: string; // key into the icon set
@@ -14,11 +15,12 @@ export interface Sport {
 }
 
 export interface Competition {
+  backendId?: number; iconUrl?: string; order?: number | null; displayOrder?: number; shortName?: string; backendGroup?: string;
   id: string;
   sportId: string;
   name: string;
   region: string; // country or area shown with the league name
-  group: 'europe-main' | 'europe-other' | 'americas' | 'world' | 'international';
+  group: 'europe-main' | 'europe-other' | 'americas' | 'world' | 'international' | 'other';
   featured?: boolean;
   eventCount?: number;
 }
@@ -406,3 +408,9 @@ export interface BetDetailRow {
  market: string; selection: string; odds: number | null; final: number | null; hit: number | null;
  betType: number | null; result: string; group: string; forecastCode: number | null; parameter: number | null;
 }
+
+export interface LeftMenuSport { ETT_ID: number; ETT_LANG: string; ET_ID: number; ET_NAME: string; ET_NAME_ABB: string; ET_NAME_LC: string; WEB_ID: number; ET_FILENAME: string }
+export interface LeftMenuSportsDataset { language: string; version: string; loadedAt: string; cacheForMs: number; items: LeftMenuSport[] }
+
+export interface BackendTournament { TOURN_ID: number; EVENT_TYPE: number; TORDER: number | null; TNAME: string; FILE_NAME: string; ET_DESCR_EN: string; TNAME_ABB: string; tourn_country: string; tourn_group: string }
+export interface TournamentDataset { version: string; loadedAt: string; cacheForMs: number; items: BackendTournament[] }

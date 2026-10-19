@@ -58,9 +58,10 @@ export const GROUP_LABEL: Record<string, string> = {
   'europe-other': 'Europe · other competitions and countries',
   world: 'Rest of the world',
   international: 'International competitions',
+  other: 'Other competitions',
 };
 /** Same order as the reference's Competitions page. */
-export const GROUP_ORDER = ['europe-main', 'americas', 'europe-other', 'world', 'international'];
+export const GROUP_ORDER = ['europe-main', 'americas', 'europe-other', 'world', 'international', 'other'];
 
 /** Competitions that belong to an area rather than one country: shown directly in their group, before the countries. */
 export const AREA_REGIONS = new Set(['UEFA', 'Europe', 'World', 'South America', 'International', 'CONCACAF', 'AFC', 'CAF']);

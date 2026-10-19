@@ -23,7 +23,7 @@ const qs = (q: Record<string, unknown>) =>
   '?' + Object.entries(q).filter(([, v]) => v !== undefined).map(([k, v]) => `${k}=${encodeURIComponent(String(v))}`).join('&');
 
 export const httpApi: Api = {
-  referenceData: { getMainGameForecasts: signal => http('GET', '/sports/main-game-forecasts', undefined, signal) },
+  referenceData: { getTournaments: signal => http('GET', '/sports/tournaments', undefined, signal), getLeftMenuSports: signal => http('GET', '/sports/left-menu', undefined, signal), getMainGameForecasts: signal => http('GET', '/sports/main-game-forecasts', undefined, signal) },
   translations: { getLabels: language => http('GET', `/translations${qs({ language })}`) },
   sportsbook: {
     getSports: () => http('GET', '/sports'),
