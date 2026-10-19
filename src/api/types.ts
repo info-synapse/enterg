@@ -387,6 +387,16 @@ export type ProfileUpdate = Partial<Pick<Player, 'firstName' | 'lastName' | 'ema
 export interface DepositHistoryQuery { from: string; to: string; status: 'all' | 'pending' | 'processed' }
 export interface DepositHistoryRow { createdAt: string; amount: number; currency: string; transactionId: string; status: number; statusText: string; processedAt: string; paymentMethod: string }
 
+export interface MainGameForecast {
+  readonly EVT_TYPE: number; readonly MGAME_ID: number; readonly FC_IDX: number;
+  readonly CD_1: number; readonly CD_X: number; readonly CD_2: number;
+  readonly CD_1X: number; readonly CD_12: number; readonly CD_X2: number;
+  readonly CD_U: number; readonly CD_O: number;
+}
+export interface MainGameForecastDataset {
+  readonly version: string; readonly loadedAt: string; readonly cacheForMs: number;
+  readonly items: readonly MainGameForecast[];
+}
 export interface Bets2Row extends BetsDesktopRow { selections: BetDetailRow[] }
 export interface BetsDesktopQuery { from: string; to: string }
 export interface BetsDesktopRow { id: string; placedAt: string; stake: number | null; system: string; lines: number | null; maxPayout: number | null; payout: number | null; final: number | null; refund: number | null; betType: number | null; bonus: number | null; bonusFactor: number | null; safeBet: number | null; odds: number | null; tax: number | null; maxTax: number | null }

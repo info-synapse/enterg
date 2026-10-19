@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { api } from '@/api';
+import { loadMainGameForecasts } from '@/lib/mainGameForecasts';
 import { WalletBalance } from './WalletBalance';
 import { HTTP_AUTH_MODE, LOGIN_TEST_MODE } from '@/api/mode';
 import type { Competition, Game, Sport, SportEvent } from '@/api/types';
@@ -259,6 +260,9 @@ export function AppFrame({ children, left, slipRail = true }: { children: ReactN
     window.scrollTo(0, 0);
     setSheetOpen(false);
   }, [pathname, setSheetOpen]);
+  useEffect(() => {
+    if (HTTP_AUTH_MODE && mode === 'sports') void loadMainGameForecasts().catch(() => { /* Loader logs failure; no mock IDs are substituted. */ });
+  }, [mode]);
   const shellCls = left ? 'shell' : slipRail ? 'shell no-left' : 'shell full';
   return (
     <>

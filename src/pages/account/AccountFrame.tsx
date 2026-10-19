@@ -2,6 +2,7 @@ import { useState, type ReactNode } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { Icon } from '@/components/Icon';
 import { AppFrame } from '@/components/Layout';
+import { useTranslations } from '@/lib/useTranslations';
 import { money } from '@/lib/format';
 import { LOGIN_TEST_MODE } from '@/api/mode';
 import { useAuth } from '@/state/AuthContext';
@@ -14,6 +15,7 @@ const NAV: { group: string; items: { to: string; label: string; icon: string; en
 ];
 
 export function BalanceCard({ compact }: { compact?: boolean }) {
+  const { t } = useTranslations();
   const { balance, refreshBalance } = useAuth();
   const nav = useNavigate();
   const [hidden, setHidden] = useState(false);
@@ -22,7 +24,7 @@ export function BalanceCard({ compact }: { compact?: boolean }) {
   return (
     <div className="card">
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span className="hint">Balance</span>
+        <span className="hint" data-translation-key="HEADER_ACCOUNTBALANCE">{t('HEADER_ACCOUNTBALANCE', 'Account Balance')}</span>
         <button className="icon-btn" style={{ width: 28, height: 28 }} onClick={() => setHidden((h) => !h)} aria-label={hidden ? 'Show balance' : 'Hide balance'}><Icon name={hidden ? 'eye' : 'eyeOff'} size={16} /></button>
         <button className="link" style={{ marginLeft: 'auto', fontSize: 'var(--fs-xs)' }} onClick={refreshBalance}>Refresh</button>
       </div>

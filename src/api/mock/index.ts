@@ -223,6 +223,8 @@ function depositedInPeriod(period: Limit['period']) {
 }
 
 export const mockApi: Api = {
+  referenceData: { getMainGameForecasts: async () => { throw new Error('Main forecast reference data requires HTTP mode.'); } },
+  translations: { getLabels: language => delay({ language, labels: { HEADER_ACCOUNTBALANCE: 'Account Balance' } }) },
   sportsbook: {
     getSports: () => delay(sports),
     getCompetitions: (sportId) =>

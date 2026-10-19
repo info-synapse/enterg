@@ -1,7 +1,7 @@
 // Service contracts: one interface per back-end domain.
 // The UI only ever calls these. Swapping mock -> real is a one-line change in ./index.ts.
 import type {
-  Bets2Row, BetDetailRow, BetsDesktopQuery, BetsDesktopRow, DepositHistoryQuery, DepositHistoryRow, ProfileUpdate, Balance, Bet, Collection, EventDetail, Game, Jackpot, Limit, LiveTable, PaymentMethod,
+  MainGameForecastDataset, Bets2Row, BetDetailRow, BetsDesktopQuery, BetsDesktopRow, DepositHistoryQuery, DepositHistoryRow, ProfileUpdate, Balance, Bet, Collection, EventDetail, Game, Jackpot, Limit, LiveTable, PaymentMethod,
   PaymentResult, PlaceBetRequest, Player, Promo, Provider, Sport, SportEvent, Transaction,
   VirtualEvent, VirtualLeague, Competition, CasinoFilterOptions, StoryGroup, SlipSelection, MicroMarket, Rewards,
 } from './types';
@@ -103,6 +103,8 @@ export interface CmsService {
 }
 
 export interface Api {
+  referenceData: { getMainGameForecasts(signal?: AbortSignal): Promise<MainGameForecastDataset> };
+  translations: { getLabels(language: string): Promise<{ language: string; labels: Record<string, string> }> };
   sportsbook: SportsbookService;
   casino: CasinoService;
   virtuals: VirtualsService;

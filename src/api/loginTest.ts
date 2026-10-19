@@ -10,6 +10,8 @@ function blocked<T extends object>(service: T): T {
 // Mixed mode: sample reads with explicit HTTP overrides. Unimplemented writes remain blocked.
 export const loginTestApi: Api = {
   ...mockApi,
+  referenceData: httpApi.referenceData,
+  translations: httpApi.translations,
   auth: {
     getSessionId: httpApi.auth.getSessionId,
     getSession: httpApi.auth.getSession,
