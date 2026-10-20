@@ -69,7 +69,7 @@ function StarButton({ id, name }: { id: string; name: string }) {
 function CompChip({ c }: { c: Competition }) {
   return (
     <Link to={`/sport/${c.sportId}/competition/${c.id}`} className="comp-chip">
-      <CatalogIcon url={c.iconUrl} region={c.region} />{c.name}
+      <CatalogIcon url={c.iconUrl} imageWidth={42} imageHeight={14} region={c.region} />{c.name}
     </Link>
   );
 }
@@ -197,7 +197,7 @@ function Competitions({ sportId }: { sportId: string }) {
           {multi ? (
             <span className={`check ${on ? 'on' : ''}`} aria-hidden="true">{on && <Icon name="check" size={14} strokeWidth={3} />}</span>
           ) : (
-            <CatalogIcon url={c.iconUrl} region={c.region} size={24} />
+            <CatalogIcon url={c.iconUrl} imageWidth={42} imageHeight={14} region={c.region} size={24} />
           )}
           <span className="tile-text">
             <span className="tile-name">{c.name}</span>
@@ -355,7 +355,7 @@ function Coupon({ sportId }: { sportId: string }) {
             const c = compOf(id);
             return (
               <button key={id} role="tab" aria-selected={focus === id} className={`comp-tab ${focus === id ? 'active' : ''}`} onClick={() => setParam('f', id)}>
-                <CatalogIcon url={c?.iconUrl} region={c?.region} size={18} />{c?.name ?? id}{!isBackendSport(sportId) && <span className="n num">{counts.get(id) ?? 0}</span>}
+                <CatalogIcon url={c?.iconUrl} imageWidth={42} imageHeight={14} region={c?.region} size={18} />{c?.name ?? id}{!isBackendSport(sportId) && <span className="n num">{counts.get(id) ?? 0}</span>}
               </button>
             );
           })}
@@ -401,7 +401,7 @@ export function CompetitionPage() {
     <SportsFrame>
       <nav style={{ display: 'flex', alignItems: 'center', gap: 8 }} aria-label="Breadcrumb">
         <Link to={`/sport/${sportId}/competitions`} className="icon-btn" aria-label="Back to competitions"><Icon name="chevronLeft" /></Link>
-        {comp && <CatalogIcon url={comp.iconUrl} region={comp.region} size={28} />}
+        {comp && <CatalogIcon url={comp.iconUrl} imageWidth={42} imageHeight={14} region={comp.region} size={28} />}
         <div style={{ minWidth: 0 }}>
           <h1 className="page-title">{comp?.name ?? ''}</h1>
           <span className="hint">{comp?.region}</span>
@@ -434,7 +434,7 @@ function CompetitionSwitcher({ sportId, current }: { sportId: string; current: s
     <CompTabs activeKey={current}>
       {list.map((c) => (
         <Link key={c.id} role="tab" aria-selected={c.id === current} className={`comp-tab ${c.id === current ? 'active' : ''}`} to={`/sport/${sportId}/competition/${c.id}`} replace>
-          <CatalogIcon url={c.iconUrl} region={c.region} size={18} />{c.name}{fav.isFav(c.id) && <Icon name="star" size={13} />}
+          <CatalogIcon url={c.iconUrl} imageWidth={42} imageHeight={14} region={c.region} size={18} />{c.name}{fav.isFav(c.id) && <Icon name="star" size={13} />}
         </Link>
       ))}
       <Link className="comp-tab more" to={`/sport/${sportId}/competitions`}>All competitions<Icon name="chevronRight" size={14} /></Link>
@@ -443,14 +443,16 @@ function CompetitionSwitcher({ sportId, current }: { sportId: string; current: s
 }
 
 /** "Sports A–Z" (first item of the sport strip on mobile): the list that lives in the left rail on desktop. */
-export function SportsIndex() {
-  const { sports, competitions } = useSportsNav();
+export function SportsIndex({ backend = false }: { backend?: boolean }) {
+  const { sports, competitions, loading, error, reload } = useSportsNav(backend);
   const fav = useFavourites();
   const mine = competitions.filter((c) => fav.isFav(c.id));
   return (
     <SportsFrame>
-      <SportStrip active="az" />
-      <h1 className="page-title">Sports A–Z</h1>
+      <SportStrip active={backend ? 'backend-index' : 'az'} />
+      <h1 className="page-title">{backend ? 'Sports' : 'Sports A–Z'}</h1>
+      {loading && <p role="status">Loading sports…</p>}
+      {error && <p role="alert">Could not load sports. <button className="btn btn-ghost" onClick={reload}>Retry</button></p>}
       {mine.length > 0 && (
         <section className="section">
           <h2 style={{ fontSize: 'var(--fs-md)' }}>My competitions</h2>
@@ -462,7 +464,7 @@ export function SportsIndex() {
         <div className="card" style={{ padding: '4px 16px' }}>
           <div className="list">
             {sports.map((s) => (
-              <Link key={s.id} className="list-row" to={`/sport/${s.id}`}><Icon name={s.icon} /><span className="main-col t">{s.name}</span>{s.liveCount > 0 && <span className="live-badge">{s.liveCount}</span>}<Icon name="chevronRight" size={16} /></Link>
+              <Link key={s.id} className="list-row" to={`/sport/${s.id}`}><CatalogIcon url={s.iconUrl} icon={s.icon} size={18} /><span className="main-col t">{s.name}</span>{s.liveCount > 0 && <span className="live-badge">{s.liveCount}</span>}<Icon name="chevronRight" size={16} /></Link>
             ))}
           </div>
         </div>

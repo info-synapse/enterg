@@ -173,9 +173,10 @@ export function LeftNav({ sports, competitions }: { sports: Sport[]; competition
 export function BottomNav() {
   const mode = useMode();
   const nav = useNavigate();
+  const { player } = useAuth();
   const { pathname } = useLocation();
-  // "Sports" opens football straight away (like the reference) and stays lit on every sport page and on Sports A–Z.
-  const inSports = pathname === '/sports' || pathname.startsWith('/sport/');
+  const inBackendSports = pathname === '/backend-sports' || pathname.startsWith('/sport/backend-');
+  const inSports = pathname === '/sports' || (pathname.startsWith('/sport/') && !inBackendSports);
   if (mode === 'casino')
     return (
       <nav className="bottom-nav casino" aria-label="Casino navigation">
@@ -187,11 +188,12 @@ export function BottomNav() {
       </nav>
     );
   return (
-    <nav className="bottom-nav" aria-label="Sports navigation">
+    <nav className="bottom-nav" aria-label="Sports navigation" style={{ gridTemplateColumns: `repeat(${player ? 6 : 5}, minmax(0, 1fr)) 60px` }}>
       <NavLink to="/" end><Icon name="home" />Home</NavLink>
       <NavLink to="/live"><Icon name="live" />Live</NavLink>
-      <NavLink to="/sport/football" className={inSports ? 'active' : ''} aria-current={inSports ? 'page' : undefined}><Icon name="sports" />Sports</NavLink>
-      <NavLink to="/account/bets"><Icon name="bets" />My bets</NavLink>
+      <NavLink to="/sports" className={inSports ? 'active' : ''} aria-current={inSports ? 'page' : undefined}><Icon name="az" />Sports A–Z</NavLink>
+      <NavLink to="/backend-sports" className={inBackendSports ? 'active' : ''} aria-current={inBackendSports ? 'page' : undefined}><Icon name="sports" />Sports</NavLink>
+      {player && <NavLink to="/account/bets"><Icon name="bets" />My bets</NavLink>}
       <NavLink to="/virtuals"><Icon name="virtuals" />Virtuals</NavLink>
       <button className="mode-switch" onClick={() => nav('/casino')} aria-label="Switch to casino"><Icon name="casino" size={24} /><span>Casino</span></button>
     </nav>

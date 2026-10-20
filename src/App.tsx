@@ -43,6 +43,7 @@ export default function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/live" element={<Live />} />
                 <Route path="/sports" element={<SportsIndex />} />
+                <Route path="/backend-sports" element={<SportsIndex backend />} />
                 <Route path="/sport/:sportId" element={<SportPage />} />
                 <Route path="/sport/:sportId/competition/:compId" element={<CompetitionPage />} />
                 <Route path="/sport/:sportId/:tab" element={<SportPage />} />
