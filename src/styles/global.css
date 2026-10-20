@@ -987,3 +987,7 @@ a.rw-card:hover { border-color: var(--ink-3); }
 
 .acct.acct-no-side { max-width: none; }
 @media (min-width: 1181px) { .acct.acct-no-side { grid-template-columns: 240px minmax(0, 1fr); } }
+
+/* Backend market availability; retained slip items are not removed. */
+.backend-market .odd:disabled .val { color: #d33; }
+.backend-market .market-body > div > .odd { width: 100%; }

@@ -1,3 +1,4 @@
+import { BackendEventPage } from './BackendEventPage';
 // Match page, mobile first: sticky score bar + match centre, fast markets (live), then market tabs
 // with Bet Builder and Players as first-class tabs. See the feature design brief for the reasoning.
 import { useMemo, useState } from 'react';
@@ -28,6 +29,11 @@ const GROUPS: { id: Group; label: string }[] = [
 ];
 
 export function EventPage() {
+  const { eventId = '' } = useParams();
+  return eventId.startsWith('backend:event:') ? <BackendEventPage key={eventId} eventId={eventId} /> : <MockEventPage />;
+}
+
+function MockEventPage() {
   const { eventId = '' } = useParams();
   const { data: ev, loading } = useAsync(() => api.sportsbook.getEvent(eventId), [eventId]);
   return (

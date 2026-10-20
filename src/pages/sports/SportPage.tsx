@@ -101,7 +101,7 @@ export function SportPage() {
       <SportStrip active={sportId} />
       <h1 className="page-title">{sport?.name ?? ''}</h1>
       <SportTabs sportId={sportId} tab={t} />
-      {isBackendSport(sportId) && <p className="hint">Backend matches · Display only; details and betting are not connected. Refresh matches to update prices.</p>}
+      {isBackendSport(sportId) && <p className="hint">Backend matches · Open a match for all markets. Selections use the temporary local betslip; real placement is not connected.</p>}
       {t === 'highlights' && <Highlights key={sportId} sportId={sportId} />}
       {t === 'competitions' && <Competitions key={sportId} sportId={sportId} />}
       {t === 'coupon' && <Coupon key={sportId} sportId={sportId} />}
@@ -293,6 +293,7 @@ function Coupon({ sportId }: { sportId: string }) {
   const windows = useMemo(() => couponWindows(), []);
   const w = windows.find((x) => x.id === (params.get('w') ?? (leagues.length ? 'all' : 'today'))) ?? windows[2];
   const [sort, setSort] = useState<'top' | 'time'>('top');
+  const [matchSearch, setMatchSearch] = useState('');
   const [market, setMarket] = useState(marketsFor(sportId)[0]);
   useEffect(() => setMarket(marketsFor(sportId)[0]), [sportId]);
   const comps = useAsync(() => api.sportsbook.getCompetitions(sportId), [sportId]);
@@ -336,7 +337,9 @@ function Coupon({ sportId }: { sportId: string }) {
     return [...ids].sort((a, b) => (rank.get(a) ?? 9999) - (rank.get(b) ?? 9999));
   }, [leagues, counts, rank]);
   const focus = tabIds.includes(params.get('f') ?? '') ? params.get('f') : null;
-  const shown = focus ? events.filter((e) => e.competitionId === focus) : events;
+  const searchTerm = matchSearch.trim().toLocaleLowerCase();
+  const shown = useMemo(() => events.filter(e => (!focus || e.competitionId === focus)
+    && (!searchTerm || [e.home, e.away, e.competitionName].some(value => value.toLocaleLowerCase().includes(searchTerm)))), [events, focus, searchTerm]);
 
   return (
     <>
@@ -374,6 +377,7 @@ function Coupon({ sportId }: { sportId: string }) {
           <button className={sort === 'top' ? 'active' : ''} onClick={() => setSort('top')}>Top competitions</button>
           <button className={sort === 'time' ? 'active' : ''} onClick={() => setSort('time')}>Kick-off time</button>
         </div>
+        <input type="search" className="input" aria-label="Search teams or tournaments" placeholder="Search teams or tournaments…" value={matchSearch} onChange={e => setMatchSearch(e.target.value)} style={{ flex: '1 1 220px', minWidth: 0, width: '100%' }} />
         <span className="hint num" style={{ marginLeft: 'auto' }}>{loading ? '' : `${shown.length} matches`}</span>
       </div>
       {isBackendSport(sportId) && <button className="btn btn-ghost" disabled={loading} onClick={() => { clearBackendEventCache(); reload(); }}>Refresh matches</button>}<MarketTabs sportId={sportId} value={market} onChange={setMarket} />
@@ -381,7 +385,7 @@ function Coupon({ sportId }: { sportId: string }) {
         <EventList
           events={shown}
           groupBy={focus ? 'day' : sort === 'top' ? 'competition' : 'time'}
-          emptyText={isBackendSport(sportId) ? 'No matches in this window. Try All dates.' : leagues.length ? 'No matches for these leagues in this window. Try All dates.' : 'No matches in this window. Pick a longer one.'}
+          emptyText={searchTerm ? `No matches for “${matchSearch.trim()}” within the selected filters.` : isBackendSport(sportId) ? 'No matches in this window. Try All dates.' : leagues.length ? 'No matches for these leagues in this window. Try All dates.' : 'No matches in this window. Pick a longer one.'}
         />
       )}
     </>

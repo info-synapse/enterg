@@ -90,6 +90,10 @@ export function BetSlipProvider({ children }: { children: ReactNode }) {
       : selections.reduce((sum, s) => sum + (stakes[s.selectionId] || 0) * liveOdds(s), 0);
 
   const place = useCallback(async () => {
+    if (selections.some(s => s.selectionId.startsWith('backend:'))) {
+      setError('Backend selections are for temporary local betslip testing only. Placement is not connected.');
+      return;
+    }
     if (!player) {
       openAuth('login');
       return;

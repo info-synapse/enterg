@@ -121,10 +121,10 @@ export function BetSlipPanel({ onClose }: { onClose?: () => void }) {
             {player && balance && balance.bettingAvailable !== null && slip.totalStake > balance.bettingAvailable && (
               <div className="alert warn">Your stake is more than your balance of {money(balance.bettingAvailable)}.</div>
             )}
-            <button className="btn btn-primary btn-block" disabled={slip.placing || slip.totalStake <= 0 || (slip.mode === 'combo' && slip.conflict)} onClick={slip.place}>
-              {!player ? 'Log in to place bet' : slip.placing ? 'Placing…' : `Place bet ${money(slip.totalStake)}`}
+            <button className="btn btn-primary btn-block" disabled={slip.selections.some(s => s.selectionId.startsWith('backend:')) || slip.placing || slip.totalStake <= 0 || (slip.mode === 'combo' && slip.conflict)} onClick={slip.place}>
+              {slip.selections.some(s => s.selectionId.startsWith('backend:')) ? 'Test betslip · placement unavailable' : !player ? 'Log in to place bet' : slip.placing ? 'Placing…' : `Place bet ${money(slip.totalStake)}`}
             </button>
-            <span className="hint" style={{ textAlign: 'center' }}>Odds changes are accepted automatically.</span>
+            <span className="hint" style={{ textAlign: 'center' }}>{slip.selections.some(s => s.selectionId.startsWith('backend:')) ? 'Temporary local selections; no real bets are submitted.' : 'Odds changes are accepted automatically.'}</span>
           </div>
         </>
       )}

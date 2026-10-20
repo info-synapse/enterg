@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { CatalogIcon } from './CatalogIcon';
+import { BackendMainOdds } from './BackendMainOdds';
 import type { SportEvent } from '@/api/types';
 import { kickoff } from '@/lib/format';
 import { dayLabel } from '@/lib/markets';
@@ -15,15 +16,15 @@ export function EventRow({ event, showCompetition }: { event: SportEvent; showCo
   const name = `${event.home} – ${event.away}`;
   if (event.readOnly) return (
     <div className="event-row">
-      <div className="event-main">
+      <Link className="event-main" to={`/event/${event.id}?sportId=${event.sportId}`}>
         <div className="event-time num">{kickoff(event.startTime)}</div>
         <div className="teams"><div className="team">{event.home}</div><div className="team">{event.away}</div>
           {showCompetition && <div className="event-meta"><CatalogIcon url={event.competitionIcon} region={event.competitionRegion} imageWidth={42} imageHeight={14} />{event.competitionName}</div>}
         </div>
-      </div>
+      </Link>
       <div className="event-odds">
-        {event.mainMarket.selections.map(s => <span className="odd" key={s.id} aria-label={`${s.label}: ${s.odds > 0 ? s.odds.toFixed(2) : 'unavailable'}`}><span className="lbl">{s.label}</span><span className="val">{s.odds > 0 ? s.odds.toFixed(2) : ''}</span></span>)}
-        <span className="more-markets num" title="Active markets">{event.marketCount}</span>
+        {event.mainMarket.selections.map(s => <BackendMainOdds key={s.id} event={event} selection={s} />)}
+        <Link className="more-markets num" aria-label="Show event markets" to={`/event/${event.id}?sportId=${event.sportId}`}>+{event.marketCount}</Link>
       </div>
     </div>
   );
