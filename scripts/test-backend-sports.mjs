@@ -9,7 +9,7 @@ const mockApi = { sportsbook: { getCompetitions: async () => [{ id: 'mock' }], g
 const api = { referenceData: { getLeftMenuSports: async () => ({ items: sports, cacheForMs: 1200000 }), getTournaments: async () => ({ items: tournaments, cacheForMs: 300000 }) } };
 const exports = {};
 vm.runInNewContext(ts.transpileModule(fs.readFileSync(new URL('../src/lib/backendSports.ts', import.meta.url), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 } }).outputText,
-  { exports, require: name => name === '@/api' ? { api } : name === '@/api/mock' ? { mockApi } : { GROUP_ORDER: ['other'] }, window: { setTimeout, clearTimeout }, performance, AbortController });
+  { exports, require: name => name === '@/api' ? { api } : name === '@/api/mock' ? { mockApi } : name === './backendEvents' ? { getBackendEvents: async () => [{ id: 'backend:event:1', competitionId: 'backend-100', readOnly: true }] } : { GROUP_ORDER: ['other'] }, window: { setTimeout, clearTimeout }, performance, AbortController });
 const mapped = exports.mapBackendCatalog(sports, tournaments);
 assert.equal(mapped.sports[0].id, 'backend-2'); assert.equal(mapped.sports[0].backendId, 2);
 assert.equal(mapped.competitions.filter(c => c.featured).length, 10);
@@ -30,7 +30,7 @@ for (const [name, country, expected] of [
 }
 assert.equal((await service.getCompetitions('backend-2')).length, 12);
 assert.equal((await service.getCompetitions('football'))[0].id, 'mock');
-assert.equal((await service.getEvents({ sportId: 'backend-2' })).length, 0);
-assert.equal((await service.getEvents({ competitionId: 'backend-100' })).length, 0); assert.equal(mockEvents, 0);
+const backendEvents = await service.getEvents({ sportId: 'backend-2' }); assert.equal(backendEvents.length, 1); assert.equal(backendEvents[0].competitionIcon, tournaments[0].FILE_NAME);
+assert.equal((await service.getEvents({ sportId: 'backend-2', competitionId: 'backend-100' })).length, 1); assert.equal(mockEvents, 0);
 await service.getEvents({ sportId: 'football' }); assert.equal(mockEvents, 1);
 console.log('Backend sports mapping/source checks passed.');

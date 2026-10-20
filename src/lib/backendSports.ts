@@ -2,6 +2,7 @@ import { api } from '@/api';
 import { mockApi } from '@/api/mock';
 import type { Competition, Sport, BackendTournament, LeftMenuSport } from '@/api/types';
 import { GROUP_ORDER } from './markets';
+import { getBackendEvents } from './backendEvents';
 
 export const isBackendSport = (id?: string) => !!id?.startsWith('backend-');
 // Demo data fallback only: use explicit country names, never infer from club names
@@ -48,8 +49,7 @@ export function loadBackendCatalog(): Promise<Catalog> {
   }).finally(() => { window.clearTimeout(timer); pending = undefined; });
   return pending;
 }
-// The existing pages use this source adapter. Backend event data is not connected
-// yet, and must never be replaced with demo events for a real tournament.
+// Backend matches are display-only; never substitute mock events or prices.
 export const sportsPageApi = {
   ...api,
   sportsbook: {
@@ -59,6 +59,9 @@ export const sportsPageApi = {
       : mockApi.sportsbook.getCompetitions(sportId),
     getEvents: (query: Parameters<typeof api.sportsbook.getEvents>[0]) =>
       isBackendSport(query.sportId) || isBackendSport(query.competitionId) || query.competitionIds?.some(isBackendSport)
-        ? Promise.resolve([]) : mockApi.sportsbook.getEvents(query),
+        ? Promise.all([getBackendEvents(query), loadBackendCatalog()]).then(([events, catalog]) => {
+          const comps = new Map(catalog.competitions.map(c => [c.id, c]));
+          return events.map(e => ({ ...e, competitionIcon: comps.get(e.competitionId)?.iconUrl, competitionRegion: comps.get(e.competitionId)?.region }));
+        }) : mockApi.sportsbook.getEvents(query),
   },
 };

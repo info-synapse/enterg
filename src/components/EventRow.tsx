@@ -1,4 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { CatalogIcon } from './CatalogIcon';
 import type { SportEvent } from '@/api/types';
 import { kickoff } from '@/lib/format';
 import { dayLabel } from '@/lib/markets';
@@ -11,6 +13,20 @@ export function EventRow({ event, showCompetition }: { event: SportEvent; showCo
   const live = useLiveClock(event.id, event.live);
   const nav = useNavigate();
   const name = `${event.home} – ${event.away}`;
+  if (event.readOnly) return (
+    <div className="event-row">
+      <div className="event-main">
+        <div className="event-time num">{kickoff(event.startTime)}</div>
+        <div className="teams"><div className="team">{event.home}</div><div className="team">{event.away}</div>
+          {showCompetition && <div className="event-meta"><CatalogIcon url={event.competitionIcon} region={event.competitionRegion} imageWidth={42} imageHeight={14} />{event.competitionName}</div>}
+        </div>
+      </div>
+      <div className="event-odds">
+        {event.mainMarket.selections.map(s => <span className="odd" key={s.id} aria-label={`${s.label}: ${s.odds > 0 ? s.odds.toFixed(2) : 'unavailable'}`}><span className="lbl">{s.label}</span><span className="val">{s.odds > 0 ? s.odds.toFixed(2) : ''}</span></span>)}
+        <span className="more-markets num" title="Active markets">{event.marketCount}</span>
+      </div>
+    </div>
+  );
   return (
     <div className="event-row">
       <Link to={`/event/${event.id}`} className="event-main">
@@ -62,10 +78,13 @@ type GroupBy = 'competition' | 'day' | 'time';
 
 /** Event list grouped by competition (default), by day, or flat by kick-off time. */
 export function EventList({ events, emptyText = 'No events right now.', groupBy = 'competition' }: { events: SportEvent[]; emptyText?: string; groupBy?: GroupBy }) {
+  const [page, setPage] = useState({ events, limit: 100 });
+  const limit = page.events === events ? page.limit : 100;
+  const visible = events.some(e => e.readOnly) ? events.slice(0, limit) : events;
   if (!events.length) return <div className="event-list"><div className="empty"><Icon name="sports" size={28} />{emptyText}</div></div>;
   const groups = new Map<string, SportEvent[]>();
-  const key = (e: SportEvent) => (groupBy === 'competition' ? e.competitionName : groupBy === 'day' ? dayLabel(e.startTime) : 'all');
-  events.forEach((e) => groups.set(key(e), [...(groups.get(key(e)) ?? []), e]));
+  const key = (e: SportEvent) => (groupBy === 'competition' ? e.competitionId : groupBy === 'day' ? dayLabel(e.startTime) : 'all');
+  visible.forEach((e) => { const k = key(e); const list = groups.get(k); if (list) list.push(e); else groups.set(k, [e]); });
   return (
     <div className="event-list labels-in-head">
       {[...groups.entries()].map(([title, list]) => {
@@ -73,8 +92,8 @@ export function EventList({ events, emptyText = 'No events right now.', groupBy 
         return (
           <div key={title}>
             <div className="comp-head">
-              {groupBy === 'competition' && <Flag region={regionOf(title)} size={18} />}
-              <span>{groupBy === 'time' ? 'By kick-off time' : title}</span>
+              {groupBy === 'competition' && (list[0].readOnly ? <CatalogIcon url={list[0].competitionIcon} region={list[0].competitionRegion} imageWidth={42} imageHeight={14} /> : <Flag region={regionOf(list[0].competitionName)} size={18} />)}
+              <span>{groupBy === 'time' ? 'By kick-off time' : groupBy === 'competition' ? list[0].competitionName : title}</span>
               <span className="cols" style={{ gridTemplateColumns: `repeat(${cols.length}, 64px)`, marginRight: 46 }}>
                 {cols.map((c, i) => <span key={i} title={c}>{c.length > 9 ? c.slice(0, 8) + '…' : c}</span>)}
               </span>
@@ -83,6 +102,7 @@ export function EventList({ events, emptyText = 'No events right now.', groupBy 
           </div>
         );
       })}
+      {visible.length < events.length && <button className="btn btn-ghost" onClick={() => setPage({ events, limit: limit + 100 })}>Show more matches ({visible.length} of {events.length})</button>}
     </div>
   );
 }

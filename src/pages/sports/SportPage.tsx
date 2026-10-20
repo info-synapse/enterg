@@ -1,3 +1,4 @@
+import { clearBackendEventCache } from '@/lib/backendEvents';
 // Pre-match sport page: Highlights · Competitions · Coupon, plus the single-competition page.
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Link, NavLink, Navigate, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
@@ -100,7 +101,7 @@ export function SportPage() {
       <SportStrip active={sportId} />
       <h1 className="page-title">{sport?.name ?? ''}</h1>
       <SportTabs sportId={sportId} tab={t} />
-      {isBackendSport(sportId) && <p className="hint">Backend competitions · Event listings and odds are not connected yet.</p>}
+      {isBackendSport(sportId) && <p className="hint">Backend matches · Display only; details and betting are not connected. Refresh matches to update prices.</p>}
       {t === 'highlights' && <Highlights key={sportId} sportId={sportId} />}
       {t === 'competitions' && <Competitions key={sportId} sportId={sportId} />}
       {t === 'coupon' && <Coupon key={sportId} sportId={sportId} />}
@@ -115,7 +116,7 @@ function Highlights({ sportId }: { sportId: string }) {
   const [limit, setLimit] = useState(14);
   useEffect(() => { setMarket(marketsFor(sportId)[0]); setLimit(14); }, [sportId]);
   const comps = useAsync(() => api.sportsbook.getCompetitions(sportId), [sportId]);
-  const { data, loading } = useAsync(() => api.sportsbook.getEvents({ sportId, live: false, marketName: market }), [sportId, market]);
+  const { data, loading, error, reload } = useAsync(() => api.sportsbook.getEvents({ sportId, live: false, marketName: market }), [sportId, market]);
   const fav = useFavourites();
   const popular = (comps.data ?? []).filter((c) => c.featured || fav.isFav(c.id));
   const windows = couponWindows().slice(0, 3);
@@ -136,8 +137,8 @@ function Highlights({ sportId }: { sportId: string }) {
         </section>
       )}
       <section className="section">
-        <MarketTabs sportId={sportId} value={market} onChange={setMarket} />
-        {loading ? <ListSkeleton rows={6} /> : <EventList events={shown} groupBy="day" emptyText={isBackendSport(sportId) ? 'Backend event listings are not connected yet.' : 'No upcoming matches in this sport.'} />}
+        {isBackendSport(sportId) && <button className="btn btn-ghost" disabled={loading} onClick={() => { clearBackendEventCache(); reload(); }}>Refresh matches</button>}<MarketTabs sportId={sportId} value={market} onChange={setMarket} />
+        {error ? <p role="alert">Could not load matches. <button className="btn btn-ghost" onClick={reload}>Retry</button></p> : loading ? <ListSkeleton rows={6} /> : <EventList events={shown} groupBy="day" emptyText={isBackendSport(sportId) ? 'No matches in this window. Try All dates.' : 'No upcoming matches in this sport.'} />}
         {ranked.length > limit && <button className="btn btn-ghost" style={{ alignSelf: 'center' }} onClick={() => setLimit((l) => l + 14)}>Show more matches</button>}
       </section>
       <section className="section">
@@ -295,7 +296,7 @@ function Coupon({ sportId }: { sportId: string }) {
   const [market, setMarket] = useState(marketsFor(sportId)[0]);
   useEffect(() => setMarket(marketsFor(sportId)[0]), [sportId]);
   const comps = useAsync(() => api.sportsbook.getCompetitions(sportId), [sportId]);
-  const { data, loading } = useAsync(
+  const { data, loading, error, reload } = useAsync(
     () => api.sportsbook.getEvents({ sportId, live: false, marketName: market, competitionIds: leagues, from: w.from?.toISOString(), to: w.to?.toISOString() }),
     [sportId, market, w.id, leagues.join(',')],
   );
@@ -349,13 +350,13 @@ function Coupon({ sportId }: { sportId: string }) {
       {tabIds.length > 1 && (
         <CompTabs activeKey={focus ?? 'all'}>
           <button role="tab" aria-selected={!focus} className={`comp-tab ${!focus ? 'active' : ''}`} onClick={() => setParam('f', null)}>
-            <Icon name={sportId === 'football' ? 'football' : 'sports'} size={18} />All{!isBackendSport(sportId) && <span className="n num">{events.length}</span>}
+            <Icon name={sportId === 'football' ? 'football' : 'sports'} size={18} />All<span className="n num">{events.length}</span>
           </button>
           {tabIds.map((id) => {
             const c = compOf(id);
             return (
               <button key={id} role="tab" aria-selected={focus === id} className={`comp-tab ${focus === id ? 'active' : ''}`} onClick={() => setParam('f', id)}>
-                <CatalogIcon url={c?.iconUrl} imageWidth={42} imageHeight={14} region={c?.region} size={18} />{c?.name ?? id}{!isBackendSport(sportId) && <span className="n num">{counts.get(id) ?? 0}</span>}
+                <CatalogIcon url={c?.iconUrl} imageWidth={42} imageHeight={14} region={c?.region} size={18} />{c?.name ?? id}<span className="n num">{counts.get(id) ?? 0}</span>
               </button>
             );
           })}
@@ -373,14 +374,14 @@ function Coupon({ sportId }: { sportId: string }) {
           <button className={sort === 'top' ? 'active' : ''} onClick={() => setSort('top')}>Top competitions</button>
           <button className={sort === 'time' ? 'active' : ''} onClick={() => setSort('time')}>Kick-off time</button>
         </div>
-        <span className="hint num" style={{ marginLeft: 'auto' }}>{loading || isBackendSport(sportId) ? '' : `${shown.length} matches`}</span>
+        <span className="hint num" style={{ marginLeft: 'auto' }}>{loading ? '' : `${shown.length} matches`}</span>
       </div>
-      <MarketTabs sportId={sportId} value={market} onChange={setMarket} />
-      {loading ? <ListSkeleton rows={8} /> : (
+      {isBackendSport(sportId) && <button className="btn btn-ghost" disabled={loading} onClick={() => { clearBackendEventCache(); reload(); }}>Refresh matches</button>}<MarketTabs sportId={sportId} value={market} onChange={setMarket} />
+      {error ? <p role="alert">Could not load matches. <button className="btn btn-ghost" onClick={reload}>Retry</button></p> : loading ? <ListSkeleton rows={8} /> : (
         <EventList
           events={shown}
           groupBy={focus ? 'day' : sort === 'top' ? 'competition' : 'time'}
-          emptyText={isBackendSport(sportId) ? 'Backend event listings are not connected yet.' : leagues.length ? 'No matches for these leagues in this window. Try All dates.' : 'No matches in this window. Pick a longer one.'}
+          emptyText={isBackendSport(sportId) ? 'No matches in this window. Try All dates.' : leagues.length ? 'No matches for these leagues in this window. Try All dates.' : 'No matches in this window. Pick a longer one.'}
         />
       )}
     </>
@@ -394,7 +395,7 @@ export function CompetitionPage() {
   const comps = useAsync(() => api.sportsbook.getCompetitions(sportId), [sportId]);
   const comp = comps.data?.find((c) => c.id === compId);
   const [market, setMarket] = useState(marketsFor(sportId)[0]);
-  const { data, loading } = useAsync(() => api.sportsbook.getEvents({ sportId, competitionId: compId, live: false, marketName: market }), [compId, market]);
+  const { data, loading, error, reload } = useAsync(() => api.sportsbook.getEvents({ sportId, competitionId: compId, live: false, marketName: market }), [compId, market]);
   const live = useAsync(() => api.sportsbook.getEvents({ sportId, competitionId: compId, live: true }), [compId]);
   if (isBackendSport(sportId) && (comps.loading || comps.error || !comp)) return <SportsFrame>{comps.loading ? <p>Loading competition…</p> : comps.error ? <p role="alert">Could not load competitions. <button onClick={comps.reload}>Retry</button></p> : <p>Competition not found for this sport.</p>}</SportsFrame>;
   return (
@@ -416,8 +417,8 @@ export function CompetitionPage() {
         </section>
       )}
       <section className="section">
-        <MarketTabs sportId={sportId} value={market} onChange={setMarket} />
-        {loading ? <ListSkeleton /> : <EventList events={data ?? []} groupBy="day" emptyText={isBackendSport(sportId) ? 'Backend event listings are not connected yet.' : 'No upcoming matches in this competition yet.'} />}
+        {isBackendSport(sportId) && <button className="btn btn-ghost" disabled={loading} onClick={() => { clearBackendEventCache(); reload(); }}>Refresh matches</button>}<MarketTabs sportId={sportId} value={market} onChange={setMarket} />
+        {error ? <p role="alert">Could not load matches. <button className="btn btn-ghost" onClick={reload}>Retry</button></p> : loading ? <ListSkeleton /> : <EventList events={data ?? []} groupBy="day" emptyText={isBackendSport(sportId) ? 'No matches in this window. Try All dates.' : 'No upcoming matches in this competition yet.'} />}
       </section>
     </SportsFrame>
   );

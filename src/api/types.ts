@@ -93,6 +93,7 @@ export interface MicroMarket {
 }
 
 export interface SportEvent {
+  readOnly?: boolean; displayDate?: string; competitionIcon?: string; competitionRegion?: string;
   id: string;
   sportId: string;
   competitionId: string;
