@@ -1,4 +1,6 @@
+import { CouponDateRange } from '@/components/CouponDateRange';
 import { clearBackendEventCache } from '@/lib/backendEvents';
+import { dateWindow, dynamicCouponWindows } from '@/lib/dynamicCouponWindows';
 // Pre-match sport page: Highlights · Competitions · Coupon, plus the single-competition page.
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Link, NavLink, Navigate, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
@@ -291,16 +293,19 @@ function Coupon({ sportId }: { sportId: string }) {
   const [params, setParams] = useSearchParams();
   const leagues = (params.get('c') ?? '').split(',').filter(Boolean);
   const windows = useMemo(() => couponWindows(), []);
-  const w = windows.find((x) => x.id === (params.get('w') ?? (leagues.length ? 'all' : 'today'))) ?? windows[2];
+  const selectedWindow = params.get('w') ?? (leagues.length ? 'all' : 'today');
+  const w = dateWindow(selectedWindow) ?? windows.find(x => x.id === selectedWindow) ?? windows[2];
   const [sort, setSort] = useState<'top' | 'time'>('top');
   const [matchSearch, setMatchSearch] = useState('');
   const [market, setMarket] = useState(marketsFor(sportId)[0]);
   useEffect(() => setMarket(marketsFor(sportId)[0]), [sportId]);
   const comps = useAsync(() => api.sportsbook.getCompetitions(sportId), [sportId]);
   const { data, loading, error, reload } = useAsync(
-    () => api.sportsbook.getEvents({ sportId, live: false, marketName: market, competitionIds: leagues, from: w.from?.toISOString(), to: w.to?.toISOString() }),
-    [sportId, market, w.id, leagues.join(',')],
+    () => api.sportsbook.getEvents({ sportId, live: false, marketName: market, competitionIds: leagues }),
+    [sportId, market, leagues.join(',')],
   );
+  // Derive available dates from the full selected-league dataset, not the active date filter.
+  const dynamicWindows = useMemo(() => dynamicCouponWindows(data ?? []), [data]);
   const fav = useFavourites();
 
   const setParam = (k: string, v: string | null) => {
@@ -316,10 +321,10 @@ function Coupon({ sportId }: { sportId: string }) {
     return m;
   }, [comps.data, fav]);
   const events = useMemo(() => {
-    const list = [...(data ?? [])];
+    const list = (data ?? []).filter(e => (!w.from || Date.parse(e.startTime) >= +w.from) && (!w.to || Date.parse(e.startTime) < +w.to));
     if (sort === 'top') list.sort((a, b) => (rank.get(a.competitionId) ?? 9999) - (rank.get(b.competitionId) ?? 9999) || Date.parse(a.startTime) - Date.parse(b.startTime));
     return list;
-  }, [data, sort, rank]);
+  }, [data, sort, rank, w.id]);
   // Keep the selected time chip visible on narrow screens.
   useEffect(() => {
     document.querySelector('.coupon-windows [aria-selected="true"]')?.scrollIntoView({ inline: 'center', block: 'nearest' });
@@ -350,6 +355,12 @@ function Coupon({ sportId }: { sportId: string }) {
           </button>
         ))}
       </div>
+      <div className="chips" aria-label="Available match dates" style={{ flexWrap: 'nowrap', overflowX: 'auto' }}>
+        {dynamicWindows.buttons.map(x => <button key={x.id} className={`chip ${x.id === w.id ? 'active' : ''}`} aria-pressed={x.id === w.id} onClick={() => setParam('w', x.id)} style={{ flexShrink: 0 }}>{x.label}</button>)}
+        <button className={`chip ${w.id === 'all' ? 'active' : ''}`} aria-pressed={w.id === 'all'} onClick={() => setParam('w', 'all')} style={{ flexShrink: 0 }}>All dates</button>
+
+      </div>
+      <CouponDateRange dates={dynamicWindows.dates} value={params.get('w')} onChange={id => setParam('w', id)} />
       {tabIds.length > 1 && (
         <CompTabs activeKey={focus ?? 'all'}>
           <button role="tab" aria-selected={!focus} className={`comp-tab ${!focus ? 'active' : ''}`} onClick={() => setParam('f', null)}>

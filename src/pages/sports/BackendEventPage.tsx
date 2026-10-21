@@ -14,12 +14,17 @@ function marketHeading(market: Market) {
 export function BackendEventPage({ eventId }: { eventId: string }) {
   const [params] = useSearchParams();
   const sportId = params.get('sportId') ?? '';
+  return <SportsFrame><BackendEventContent eventId={eventId} sportId={sportId} /></SportsFrame>;
+}
+
+// Shared by the full event page and the floating preview: identical market controls.
+export function BackendEventContent({ eventId, sportId, preview = false }: { eventId: string; sportId: string; preview?: boolean }) {
   const info = useAsync(async () => sportId ? (await getBackendEvents({ sportId })).find(e => e.id === eventId) : undefined, [sportId, eventId]);
   const result = useAsync(() => loadMarkets(eventId), [eventId]);
   const event = info.data;
   const name = event ? `${event.home} – ${event.away}` : `Event ${eventId.replace('backend:event:', '')}`;
-  return <SportsFrame>
-    <Link to={sportId ? `/sport/${sportId}/coupon` : '/backend-sports'}>Back to matches</Link>
+  return <>
+    {!preview && <Link to={sportId ? `/sport/${sportId}/coupon` : '/backend-sports'}>Back to matches</Link>}
     <h1 className="page-title">{name}</h1>
     {event && <p>{event.competitionName} · {new Date(event.startTime).toLocaleString()}</p>}
     <p className="hint">Temporary local betslip only. Prices are a snapshot; real betting is not connected.</p>
@@ -30,12 +35,12 @@ export function BackendEventPage({ eventId }: { eventId: string }) {
     {result.error ? <p role="alert">Could not load markets. <button onClick={result.reload}>Retry</button></p> : result.loading ? <div className="skeleton" style={{ height: 240 }} /> : <>
       {result.data?.markets.map(m => <section className="market backend-market" key={m.id}>
         <h2 className="market-head">{marketHeading(m)}</h2>
-        <div className={`market-body ${m.selections.length === 2 ? 'cols-2' : m.selections.length === 3 ? 'cols-3' : ''}`}>
+        <div className={`market-body ${m.selections.length === 2 ? 'cols-2' : m.selections.length === 3 ? 'cols-3' : m.selections.length === 6 && m.selections.every(s => s.label.length <= 12) ? 'compact-six' : ''}`}>
           {m.selections.map(s => s.odds <= 0 ? <span key={s.id} className="odd"><span className="lbl">{s.label}</span></span> :
             <div key={s.id} style={s.suspended ? { color: 'var(--danger, #d33)' } : undefined}><OddsButton selection={{ ...s, suspended: s.suspended || !event || !!info.error }} eventId={eventId} eventName={name} marketName={m.name} wide /></div>)}
         </div>
       </section>)}
       {!result.data?.markets.length && <p className="empty">No markets available.</p>}
     </>}
-  </SportsFrame>;
+  </>;
 }

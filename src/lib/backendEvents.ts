@@ -29,7 +29,7 @@ export async function getBackendEvents(query: EventQuery): Promise<SportEvent[]>
           if (!res.ok) throw new Error('Could not load matches.');
           const data = await res.json();
           if (!Array.isArray(data.items)) throw new Error('Invalid match list.');
-          cache.set(key, { items: data.items, expires: performance.now() + 300000 });
+          cache.set(key, { items: data.items, expires: performance.now() + 1800000 });
           // Bound retained browser memory when switching between many sports.
           if (cache.size > 4) cache.delete(cache.keys().next().value!);
           return data.items as SportEvent[];

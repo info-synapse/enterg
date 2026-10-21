@@ -19,7 +19,7 @@ assert.equal((await get({ sportId: 'backend-2', competitionIds: ['backend-2'] })
 assert.equal((await get({ sportId: 'backend-2', from: '2026-10-20T10:00:00Z', to: '2026-10-21T10:00:00Z' })).length, 1);
 assert.equal(calls, 1);
 assert.equal((await get({ sportId: 'backend-2', live: true })).length, 0);
-now = 299999; await get({ sportId: 'backend-2' }); assert.equal(calls, 1);
-now = 300001; await get({ sportId: 'backend-2' }); assert.equal(calls, 2);
+now = 1799999; await get({ sportId: 'backend-2' }); assert.equal(calls, 1);
+now = 1800001; await get({ sportId: 'backend-2' }); assert.equal(calls, 2);
 exports.clearBackendEventCache(); await get({ sportId: 'backend-2' }); assert.equal(calls, 3);
 console.log('Browser event cache, concurrent loading, expiry and competition/date filters passed.');

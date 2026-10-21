@@ -2,6 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { CatalogIcon } from './CatalogIcon';
 import { BackendMainOdds } from './BackendMainOdds';
+import { EventMarketPreview } from './EventMarketPreview';
 import type { SportEvent } from '@/api/types';
 import { kickoff } from '@/lib/format';
 import { dayLabel } from '@/lib/markets';
@@ -24,7 +25,10 @@ export function EventRow({ event, showCompetition }: { event: SportEvent; showCo
       </Link>
       <div className="event-odds">
         {event.mainMarket.selections.map(s => <BackendMainOdds key={s.id} event={event} selection={s} />)}
-        <Link className="more-markets num" aria-label="Show event markets" to={`/event/${event.id}?sportId=${event.sportId}`}>+{event.marketCount}</Link>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <Link className="more-markets num" aria-label="Show event markets" to={`/event/${event.id}?sportId=${event.sportId}`}>+{event.marketCount}</Link>
+          <EventMarketPreview event={event} />
+        </div>
       </div>
     </div>
   );

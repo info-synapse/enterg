@@ -991,3 +991,16 @@ a.rw-card:hover { border-color: var(--ink-3); }
 /* Backend market availability; retained slip items are not removed. */
 .backend-market .odd:disabled .val { color: #d33; }
 .backend-market .market-body > div > .odd { width: 100%; }
+
+/* Six short outcomes: use actual panel width, including the floating preview. */
+.backend-market { container-type: inline-size; }
+@media (min-width: 901px) {
+  .backend-market .market-body.compact-six { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .backend-market .market-body > div { min-width: 0; }
+  @container (min-width: 600px) {
+    .backend-market .market-body.compact-six { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
+    .backend-market .compact-six .odd.wide { flex-direction: row; justify-content: space-between; gap: 4px; padding: 4px 6px; }
+    .backend-market .compact-six .odd .lbl { font-size: 0.72rem; }
+    .backend-market .compact-six .odd .val { font-size: 0.85rem; }
+  }
+}
