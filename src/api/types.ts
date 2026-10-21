@@ -26,6 +26,7 @@ export interface Competition {
 }
 
 export interface Selection {
+  parameter?: number | null;
   id: string;
   label: string; // "1", "X", "Over 2.5", "Olympiacos"
   odds: number;

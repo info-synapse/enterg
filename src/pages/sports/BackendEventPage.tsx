@@ -1,3 +1,4 @@
+import type { Market } from '@/api/types';
 import { Link, useSearchParams } from 'react-router-dom';
 import { loadMarkets } from '@/lib/backendMarkets';
 import { useAsync } from '@/lib/useAsync';
@@ -5,6 +6,11 @@ import { getBackendEvents } from '@/lib/backendEvents';
 import { SportsFrame } from './SportsFrame';
 import { OddsButton } from '@/components/OddsButton';
 
+function marketHeading(market: Market) {
+  const parameters = [...new Set(market.selections.map(s => s.parameter)
+    .filter((p): p is number => typeof p === 'number' && Number.isFinite(p) && p !== 0))];
+  return parameters.length ? `${market.name} ${parameters[0]}` : market.name;
+}
 export function BackendEventPage({ eventId }: { eventId: string }) {
   const [params] = useSearchParams();
   const sportId = params.get('sportId') ?? '';
@@ -23,7 +29,7 @@ export function BackendEventPage({ eventId }: { eventId: string }) {
     <div className="tabs" role="tablist"><button role="tab" aria-selected="true">All markets</button></div>
     {result.error ? <p role="alert">Could not load markets. <button onClick={result.reload}>Retry</button></p> : result.loading ? <div className="skeleton" style={{ height: 240 }} /> : <>
       {result.data?.markets.map(m => <section className="market backend-market" key={m.id}>
-        <h2 className="market-head">{m.name}</h2>
+        <h2 className="market-head">{marketHeading(m)}</h2>
         <div className={`market-body ${m.selections.length === 2 ? 'cols-2' : m.selections.length === 3 ? 'cols-3' : ''}`}>
           {m.selections.map(s => s.odds <= 0 ? <span key={s.id} className="odd"><span className="lbl">{s.label}</span></span> :
             <div key={s.id} style={s.suspended ? { color: 'var(--danger, #d33)' } : undefined}><OddsButton selection={{ ...s, suspended: s.suspended || !event || !!info.error }} eventId={eventId} eventName={name} marketName={m.name} wide /></div>)}
