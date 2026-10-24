@@ -270,13 +270,13 @@ export function AppFrame({ children, left, slipRail = true }: { children: ReactN
   const shellCls = left ? 'shell' : slipRail ? 'shell no-left' : 'shell full';
   return (
     <>
-      <div className="demo-banner">{LOGIN_TEST_MODE ? 'Mixed mode · backend account login · sample sports/casino content' : 'Prototype with sample data · log in with any username and a password of 4+ characters'}</div>
       <Header onSearch={() => setSearch(true)} />
       <div className={shellCls}>
         {left}
         <main className="main" id="main">{children}<Footer /></main>
         {slipRail && <aside className="rail" aria-label="Bet slip"><BetSlipPanel /></aside>}
       </div>
+      <div className="demo-banner">{LOGIN_TEST_MODE ? 'Mixed mode · backend account login · sample sports/casino content' : 'Prototype with sample data · log in with any username and a password of 4+ characters'}</div>
       <BottomNav />
       <SlipPillAndSheet sportsMode={slipRail} />
       {search && (mode === 'casino' ? <CasinoSearch onClose={() => setSearch(false)} /> : <SearchSheet onClose={() => setSearch(false)} />)}

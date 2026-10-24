@@ -15,6 +15,9 @@ import { AREA_REGIONS, GROUP_LABEL, GROUP_ORDER, couponWindows, marketTabLabel, 
 import { useFavourites } from '@/state/FavouritesContext';
 import { SportsFrame, useSportsNav } from './SportsFrame';
 
+const configuredPopularLimit = Number(import.meta.env.VITE_POPULAR_COMPETITIONS_LIMIT ?? 3);
+const popularLimit = Number.isInteger(configuredPopularLimit) && configuredPopularLimit > 0 ? configuredPopularLimit : 3;
+
 type Tab = 'highlights' | 'competitions' | 'coupon';
 
 /* ---------- Shared pieces ---------- */
@@ -101,9 +104,7 @@ export function SportPage() {
   return (
     <SportsFrame>
       <SportStrip active={sportId} />
-      <h1 className="page-title">{sport?.name ?? ''}</h1>
       <SportTabs sportId={sportId} tab={t} />
-      {isBackendSport(sportId) && <p className="hint">Backend matches · Open a match for all markets. Selections use the temporary local betslip; real placement is not connected.</p>}
       {t === 'highlights' && <Highlights key={sportId} sportId={sportId} />}
       {t === 'competitions' && <Competitions key={sportId} sportId={sportId} />}
       {t === 'coupon' && <Coupon key={sportId} sportId={sportId} />}
@@ -135,7 +136,7 @@ function Highlights({ sportId }: { sportId: string }) {
       {popular.length > 0 && (
         <section className="section">
           <div className="section-head"><h2>Popular</h2><Link className="more" to={`/sport/${sportId}/competitions`}>All competitions</Link></div>
-          <div className="chips">{popular.map((c) => <CompChip key={c.id} c={c} />)}</div>
+          <div className="chips">{popular.slice(0, popularLimit).map((c) => <CompChip key={c.id} c={c} />)}</div>
         </section>
       )}
       <section className="section">
@@ -235,7 +236,7 @@ function Competitions({ sportId }: { sportId: string }) {
           </section>
           <section className="section">
             <div className="section-head"><h2>Popular competitions</h2></div>
-            <div className="comp-grid">{popular.map((c) => renderTile(c))}</div>
+            <div className="comp-grid">{popular.slice(0, popularLimit).map((c) => renderTile(c))}</div>
           </section>
           <section className="section">
             <div className="section-head"><h2>All competitions</h2><span className="meta num">{all.length}</span></div>
@@ -327,7 +328,7 @@ function Coupon({ sportId }: { sportId: string }) {
   }, [data, sort, rank, w.id]);
   // Keep the selected time chip visible on narrow screens.
   useEffect(() => {
-    document.querySelector('.coupon-windows [aria-selected="true"]')?.scrollIntoView({ inline: 'center', block: 'nearest' });
+    document.querySelector('.coupon-windows [aria-pressed="true"]')?.scrollIntoView({ inline: 'center', block: 'nearest' });
   }, [w.id]);
   const compOf = (id: string) => comps.data?.find((c) => c.id === id);
 
@@ -348,14 +349,7 @@ function Coupon({ sportId }: { sportId: string }) {
 
   return (
     <>
-      <div className="chips coupon-windows" role="tablist" aria-label="Kick-off window">
-        {windows.map((x) => (
-          <button key={x.id} role="tab" aria-selected={x.id === w.id} className={`chip ${x.id === w.id ? 'active' : ''}`} onClick={() => setParam('w', x.id)}>
-            {x.id === '3h' || x.id === '12h' ? <Icon name="history" size={14} /> : null}{x.label}
-          </button>
-        ))}
-      </div>
-      <div className="chips" aria-label="Available match dates" style={{ flexWrap: 'nowrap', overflowX: 'auto' }}>
+      <div className="chips coupon-windows" aria-label="Available match dates" style={{ flexWrap: 'nowrap', overflowX: 'auto' }}>
         {dynamicWindows.buttons.map(x => <button key={x.id} className={`chip ${x.id === w.id ? 'active' : ''}`} aria-pressed={x.id === w.id} onClick={() => setParam('w', x.id)} style={{ flexShrink: 0 }}>{x.label}</button>)}
         <button className={`chip ${w.id === 'all' ? 'active' : ''}`} aria-pressed={w.id === 'all'} onClick={() => setParam('w', 'all')} style={{ flexShrink: 0 }}>All dates</button>
 

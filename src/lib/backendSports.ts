@@ -36,15 +36,27 @@ export function mapBackendCatalog(sports: LeftMenuSport[], tournaments: BackendT
 }
 type Catalog = ReturnType<typeof mapBackendCatalog>;
 let cache: Catalog | undefined, expires = 0, pending: Promise<Catalog> | undefined;
-export function loadBackendCatalog(): Promise<Catalog> {
+export async function loadBackendCatalog(sportId?: string): Promise<Catalog> {
+  const timingStarted = performance.now();
+  const source = cache && timingStarted < expires ? 'browser-memory' : pending ? 'shared-request' : 'gateway';
+  try {
+    const result = await retrieveBackendCatalog();
+    console.info('[sports timing]', { event: 'competitions_load', sportId: sportId ?? 'all', source, status: 'ok', durationMs: Math.round(performance.now() - timingStarted), recordCount: result.competitions.filter(c => !sportId || c.sportId === sportId).length });
+    return result;
+  } catch (error) {
+    console.info('[sports timing]', { event: 'competitions_load', sportId: sportId ?? 'all', source, status: 'error', durationMs: Math.round(performance.now() - timingStarted) });
+    throw error;
+  }
+}
+function retrieveBackendCatalog(): Promise<Catalog> {
   if (cache && performance.now() < expires) return Promise.resolve(cache);
   if (pending) return pending;
   const started = performance.now(), controller = new AbortController();
   const timer = window.setTimeout(() => controller.abort(), 35000);
-  pending = Promise.all([api.referenceData.getLeftMenuSports(controller.signal), api.referenceData.getTournaments(controller.signal)]).then(([sports, tournaments]) => {
+  pending = Promise.all([api.referenceData.getLeftMenuSports(controller.signal), api.referenceData.getTournaments(controller.signal).then(result => { console.info('[sports timing]', { event: 'tournaments_http', sportId: 'all', durationMs: Math.round(performance.now() - started), recordCount: result.items.length }); return result; })]).then(([sports, tournaments]) => {
     if (!Array.isArray(sports.items) || !Array.isArray(tournaments.items)) throw new Error('Invalid backend catalog');
     cache = mapBackendCatalog(sports.items, tournaments.items);
-    expires = started + Math.max(0, Math.min(300000, sports.cacheForMs, tournaments.cacheForMs));
+    expires = started + Math.max(0, Math.min(1800000, sports.cacheForMs, tournaments.cacheForMs));
     return cache;
   }).finally(() => { window.clearTimeout(timer); pending = undefined; });
   return pending;
@@ -55,11 +67,11 @@ export const sportsPageApi = {
   sportsbook: {
     ...mockApi.sportsbook,
     getCompetitions: async (sportId?: string) => isBackendSport(sportId)
-      ? (await loadBackendCatalog()).competitions.filter(c => c.sportId === sportId)
+      ? (await loadBackendCatalog(sportId)).competitions.filter(c => c.sportId === sportId)
       : mockApi.sportsbook.getCompetitions(sportId),
     getEvents: (query: Parameters<typeof api.sportsbook.getEvents>[0]) =>
       isBackendSport(query.sportId) || isBackendSport(query.competitionId) || query.competitionIds?.some(isBackendSport)
-        ? Promise.all([getBackendEvents(query), loadBackendCatalog()]).then(([events, catalog]) => {
+        ? Promise.all([getBackendEvents(query), loadBackendCatalog(query.sportId)]).then(([events, catalog]) => {
           const comps = new Map(catalog.competitions.map(c => [c.id, c]));
           return events.map(e => ({ ...e, competitionIcon: comps.get(e.competitionId)?.iconUrl, competitionRegion: comps.get(e.competitionId)?.region }));
         }) : mockApi.sportsbook.getEvents(query),

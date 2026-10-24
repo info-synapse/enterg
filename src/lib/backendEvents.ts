@@ -17,6 +17,9 @@ export async function getBackendEvents(query: EventQuery): Promise<SportEvent[]>
   if (!sport) throw new Error('A backend sport is required.');
   const timezone = -new Date().getTimezoneOffset() / 60;
   const key = `${sport}:CY:${timezone}`;
+  const started = performance.now();
+  const source = cache.has(key) && cache.get(key)!.expires > started ? 'browser-memory' : pending.has(key) ? 'shared-request' : 'gateway';
+  try {
   let items = cache.get(key);
   if (!items || items.expires <= performance.now()) {
     let request = pending.get(key);
@@ -27,7 +30,9 @@ export async function getBackendEvents(query: EventQuery): Promise<SportEvent[]>
           const base = import.meta.env.VITE_API_BASE_URL ?? '/api';
           const res = await fetch(`${base}/sports/events?sportId=${sport}&timezone=${timezone}`, { credentials: 'include', cache: 'no-store', signal: controller.signal });
           if (!res.ok) throw new Error('Could not load matches.');
+          const headersMs = Math.round(performance.now() - started);
           const data = await res.json();
+          console.info('[sports timing]', { event: 'events_http', sportId: Number(sport), headersMs, bodyAndParseMs: Math.round(performance.now() - started) - headersMs, recordCount: data.items?.length });
           if (!Array.isArray(data.items)) throw new Error('Invalid match list.');
           cache.set(key, { items: data.items, expires: performance.now() + 1800000 });
           // Bound retained browser memory when switching between many sports.
@@ -40,4 +45,10 @@ export async function getBackendEvents(query: EventQuery): Promise<SportEvent[]>
     return filterBackendEvents(await request, query);
   }
   return filterBackendEvents(items.items, query);
+  } catch (error) {
+    console.info('[sports timing]', { event: 'events_error', sportId: Number(sport), source });
+    throw error;
+  } finally {
+    console.info('[sports timing]', { event: 'events_load', sportId: Number(sport), source, durationMs: Math.round(performance.now() - started) });
+  }
 }

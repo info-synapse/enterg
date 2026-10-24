@@ -18,7 +18,7 @@ function load(): Promise<Labels> {
   const source = HTTP_AUTH_MODE ? 'gateway-http' : 'demo';
   pending = api.translations.getLabels(language).then(result => {
     if (result.language !== language || !result.labels || typeof result.labels !== 'object' || Array.isArray(result.labels) || Object.values(result.labels).some(value => typeof value !== 'string')) throw new Error('Invalid translation dictionary');
-    cache = result.labels; expires = Date.now() + 300000;
+    cache = result.labels; expires = Date.now() + 1800000;
     timing(source, 'ok', cache);
     return cache;
   }).catch(error => { timing(source, 'error'); throw error; }).finally(() => { pending = undefined; });

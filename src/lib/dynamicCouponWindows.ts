@@ -29,5 +29,5 @@ export function dynamicCouponWindows(events: { startTime: string }[], now = new 
     .map(hours => ({ id: `${hours}h`, label: `${hours} hours`, from: now, to: new Date(+now + hours * 3600000) }));
   const days = dates.map(d => ({ ...d, label: +d.from! === +today ? 'Today' : +d.from! === +tomorrow ? 'Tomorrow'
     : d.from!.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).replace(',', '') }));
-  return { buttons: [...short, ...days].slice(0, 8), dates };
+  return { buttons: [...short, ...days].slice(0, 6), dates };
 }
