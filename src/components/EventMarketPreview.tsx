@@ -56,7 +56,7 @@ export function EventMarketPreview({ event }: { event: SportEvent }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: -16, background: 'var(--surface)', zIndex: 2, padding: '8px 0' }}>
         <strong>Market preview</strong><button className="icon-btn" aria-label="Close market preview" onClick={close}><Icon name="close" size={18} /></button>
       </div>
-      <BackendEventContent key={event.id} eventId={event.id} sportId={event.sportId} preview />
+      <BackendEventContent key={event.id} eventId={event.id} sportId={event.sportId} competitionId={event.competitionId} preview />
     </div>, document.body)}
   </>;
 }

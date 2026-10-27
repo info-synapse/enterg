@@ -119,9 +119,13 @@ function Highlights({ sportId }: { sportId: string }) {
   const [limit, setLimit] = useState(14);
   useEffect(() => { setMarket(marketsFor(sportId)[0]); setLimit(14); }, [sportId]);
   const comps = useAsync(() => api.sportsbook.getCompetitions(sportId), [sportId]);
-  const { data, loading, error, reload } = useAsync(() => api.sportsbook.getEvents({ sportId, live: false, marketName: market }), [sportId, market]);
   const fav = useFavourites();
   const popular = (comps.data ?? []).filter((c) => c.featured || fav.isFav(c.id));
+  const highlightIds = popular.slice(0, popularLimit).map(c => c.id);
+  const { data, loading, error, reload } = useAsync(() => api.sportsbook.getEvents({
+    sportId, live: false, marketName: market,
+    ...(isBackendSport(sportId) ? { backendTournamentIds: highlightIds } : {}),
+  }), [sportId, market, highlightIds.join(',')]);
   const windows = couponWindows().slice(0, 3);
   const countIn = (w: (typeof windows)[number]) => (data ?? []).filter((e) => Date.parse(e.startTime) >= w.from!.getTime() && Date.parse(e.startTime) < w.to!.getTime()).length;
   // Highlights favour the leagues people bet on most: featured and starred first, then by kick-off.
@@ -140,7 +144,7 @@ function Highlights({ sportId }: { sportId: string }) {
         </section>
       )}
       <section className="section">
-        {isBackendSport(sportId) && <button className="btn btn-ghost" disabled={loading} onClick={() => { clearBackendEventCache(); reload(); }}>Refresh matches</button>}<MarketTabs sportId={sportId} value={market} onChange={setMarket} />
+        {isBackendSport(sportId) && <button className="btn btn-ghost" disabled={loading} onClick={reload}>Refresh matches</button>}<MarketTabs sportId={sportId} value={market} onChange={setMarket} />
         {error ? <p role="alert">Could not load matches. <button className="btn btn-ghost" onClick={reload}>Retry</button></p> : loading ? <ListSkeleton rows={6} /> : <EventList events={shown} groupBy="day" emptyText={isBackendSport(sportId) ? 'No matches in this window. Try All dates.' : 'No upcoming matches in this sport.'} />}
         {ranked.length > limit && <button className="btn btn-ghost" style={{ alignSelf: 'center' }} onClick={() => setLimit((l) => l + 14)}>Show more matches</button>}
       </section>
@@ -426,7 +430,7 @@ export function CompetitionPage() {
         </section>
       )}
       <section className="section">
-        {isBackendSport(sportId) && <button className="btn btn-ghost" disabled={loading} onClick={() => { clearBackendEventCache(); reload(); }}>Refresh matches</button>}<MarketTabs sportId={sportId} value={market} onChange={setMarket} />
+        {isBackendSport(sportId) && <button className="btn btn-ghost" disabled={loading} onClick={reload}>Refresh matches</button>}<MarketTabs sportId={sportId} value={market} onChange={setMarket} />
         {error ? <p role="alert">Could not load matches. <button className="btn btn-ghost" onClick={reload}>Retry</button></p> : loading ? <ListSkeleton /> : <EventList events={data ?? []} groupBy="day" emptyText={isBackendSport(sportId) ? 'No matches in this window. Try All dates.' : 'No upcoming matches in this competition yet.'} />}
       </section>
     </SportsFrame>

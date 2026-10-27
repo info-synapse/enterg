@@ -23,3 +23,16 @@ now = 1799999; await get({ sportId: 'backend-2' }); assert.equal(calls, 1);
 now = 1800001; await get({ sportId: 'backend-2' }); assert.equal(calls, 2);
 exports.clearBackendEventCache(); await get({ sportId: 'backend-2' }); assert.equal(calls, 3);
 console.log('Browser event cache, concurrent loading, expiry and competition/date filters passed.');
+
+const before = calls;
+await Promise.all([get({ sportId: 'backend-2', backendTournamentIds: ['backend-1'] }), get({ sportId: 'backend-2', backendTournamentIds: ['backend-1'] })]);
+assert.equal(calls, before + 1);
+await get({ sportId: 'backend-2', backendTournamentIds: ['backend-1'] });
+assert.equal(calls, before + 2);
+await get({ sportId: 'backend-2' });
+assert.equal(calls, before + 2); // Partial requests cannot overwrite or invalidate the full cache.
+await get({ sportId: 'backend-2', backendTournamentIds: [] });
+assert.equal(calls, before + 2);
+await get({ sportId: 'backend-2', competitionId: 'backend-1' });
+assert.equal(calls, before + 3);
+console.log('Tournament requests share in-flight work without caching or changing full-sport cache.');

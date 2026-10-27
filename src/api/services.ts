@@ -7,6 +7,7 @@ import type {
 } from './types';
 
 export interface EventQuery {
+  backendTournamentIds?: string[]; // Explicit uncached tournament scope.
   sportId?: string;
   live?: boolean;
   competitionId?: string;

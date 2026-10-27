@@ -14,12 +14,12 @@ function marketHeading(market: Market) {
 export function BackendEventPage({ eventId }: { eventId: string }) {
   const [params] = useSearchParams();
   const sportId = params.get('sportId') ?? '';
-  return <SportsFrame><BackendEventContent eventId={eventId} sportId={sportId} /></SportsFrame>;
+  return <SportsFrame><BackendEventContent eventId={eventId} sportId={sportId} competitionId={params.get('competitionId') ?? undefined} /></SportsFrame>;
 }
 
 // Shared by the full event page and the floating preview: identical market controls.
-export function BackendEventContent({ eventId, sportId, preview = false }: { eventId: string; sportId: string; preview?: boolean }) {
-  const info = useAsync(async () => sportId ? (await getBackendEvents({ sportId })).find(e => e.id === eventId) : undefined, [sportId, eventId]);
+export function BackendEventContent({ eventId, sportId, competitionId, preview = false }: { eventId: string; sportId: string; competitionId?: string; preview?: boolean }) {
+  const info = useAsync(async () => sportId ? (await getBackendEvents({ sportId, competitionId })).find(e => e.id === eventId) : undefined, [sportId, eventId, competitionId]);
   const result = useAsync(() => loadMarkets(eventId), [eventId]);
   const event = info.data;
   const name = event ? `${event.home} – ${event.away}` : `Event ${eventId.replace('backend:event:', '')}`;

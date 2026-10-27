@@ -17,7 +17,7 @@ export function EventRow({ event, showCompetition }: { event: SportEvent; showCo
   const name = `${event.home} – ${event.away}`;
   if (event.readOnly) return (
     <div className="event-row">
-      <Link className="event-main" to={`/event/${event.id}?sportId=${event.sportId}`}>
+      <Link className="event-main" to={`/event/${event.id}?sportId=${event.sportId}&competitionId=${event.competitionId}`}>
         <div className="event-time num">{kickoff(event.startTime)}</div>
         <div className="teams"><div className="team">{event.home}</div><div className="team">{event.away}</div>
           {showCompetition && <div className="event-meta"><CatalogIcon url={event.competitionIcon} region={event.competitionRegion} imageWidth={42} imageHeight={14} />{event.competitionName}</div>}
@@ -26,7 +26,7 @@ export function EventRow({ event, showCompetition }: { event: SportEvent; showCo
       <div className="event-odds">
         {event.mainMarket.selections.map(s => <BackendMainOdds key={s.id} event={event} selection={s} />)}
         <div style={{ display: 'flex', alignItems: 'center' }}>
-          <Link className="more-markets num" aria-label="Show event markets" to={`/event/${event.id}?sportId=${event.sportId}`}>+{event.marketCount}</Link>
+          <Link className="more-markets num" aria-label="Show event markets" to={`/event/${event.id}?sportId=${event.sportId}&competitionId=${event.competitionId}`}>+{event.marketCount}</Link>
           <EventMarketPreview event={event} />
         </div>
       </div>
