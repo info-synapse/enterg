@@ -1,5 +1,4 @@
 import { CouponDateRange } from '@/components/CouponDateRange';
-import { clearBackendEventCache } from '@/lib/backendEvents';
 import { dateWindow, dynamicCouponWindows } from '@/lib/dynamicCouponWindows';
 // Pre-match sport page: Highlights · Competitions · Coupon, plus the single-competition page.
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
@@ -144,7 +143,7 @@ function Highlights({ sportId }: { sportId: string }) {
         </section>
       )}
       <section className="section">
-        {isBackendSport(sportId) && <button className="btn btn-ghost" disabled={loading} onClick={reload}>Refresh matches</button>}<MarketTabs sportId={sportId} value={market} onChange={setMarket} />
+        <MarketTabs sportId={sportId} value={market} onChange={setMarket} />
         {error ? <p role="alert">Could not load matches. <button className="btn btn-ghost" onClick={reload}>Retry</button></p> : loading ? <ListSkeleton rows={6} /> : <EventList events={shown} groupBy="day" emptyText={isBackendSport(sportId) ? 'No matches in this window. Try All dates.' : 'No upcoming matches in this sport.'} />}
         {ranked.length > limit && <button className="btn btn-ghost" style={{ alignSelf: 'center' }} onClick={() => setLimit((l) => l + 14)}>Show more matches</button>}
       </section>
@@ -389,7 +388,7 @@ function Coupon({ sportId }: { sportId: string }) {
         <input type="search" className="input" aria-label="Search teams or tournaments" placeholder="Search teams or tournaments…" value={matchSearch} onChange={e => setMatchSearch(e.target.value)} style={{ flex: '1 1 220px', minWidth: 0, width: '100%' }} />
         <span className="hint num" style={{ marginLeft: 'auto' }}>{loading ? '' : `${shown.length} matches`}</span>
       </div>
-      {isBackendSport(sportId) && <button className="btn btn-ghost" disabled={loading} onClick={() => { clearBackendEventCache(); reload(); }}>Refresh matches</button>}<MarketTabs sportId={sportId} value={market} onChange={setMarket} />
+      <MarketTabs sportId={sportId} value={market} onChange={setMarket} />
       {error ? <p role="alert">Could not load matches. <button className="btn btn-ghost" onClick={reload}>Retry</button></p> : loading ? <ListSkeleton rows={8} /> : (
         <EventList
           events={shown}
@@ -430,7 +429,7 @@ export function CompetitionPage() {
         </section>
       )}
       <section className="section">
-        {isBackendSport(sportId) && <button className="btn btn-ghost" disabled={loading} onClick={reload}>Refresh matches</button>}<MarketTabs sportId={sportId} value={market} onChange={setMarket} />
+        <MarketTabs sportId={sportId} value={market} onChange={setMarket} />
         {error ? <p role="alert">Could not load matches. <button className="btn btn-ghost" onClick={reload}>Retry</button></p> : loading ? <ListSkeleton /> : <EventList events={data ?? []} groupBy="day" emptyText={isBackendSport(sportId) ? 'No matches in this window. Try All dates.' : 'No upcoming matches in this competition yet.'} />}
       </section>
     </SportsFrame>
