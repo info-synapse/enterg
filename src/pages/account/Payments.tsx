@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { api } from '@/api';
+import { mockApi } from '@/api/mock';
 import { LOGIN_TEST_MODE } from '@/api/mode';
 import type { PaymentMethod, PaymentResult } from '@/api/types';
 import { Icon } from '@/components/Icon';
@@ -14,7 +15,7 @@ const GROUP_LABEL: Record<PaymentMethod['group'], string> = { bank: 'Bank and ca
 const short = (m: PaymentMethod) =>
   m.name.match(/Visa|Apple|Google|PayPal|Skrill|IRIS|Paysafe/)?.[0].toUpperCase().slice(0, 6) ?? m.name.split(' ').map((w) => w[0]).join('').slice(0, 4).toUpperCase();
 
-function MethodList({ methods, base }: { methods: PaymentMethod[]; base: string }) {
+export function MethodList({ methods, base, disabled = LOGIN_TEST_MODE }: { methods: PaymentMethod[]; base: string; disabled?: boolean }) {
   const groups = (['bank', 'wallet', 'cash'] as const).filter((g) => methods.some((m) => m.group === g));
   return (
     <>
@@ -22,7 +23,7 @@ function MethodList({ methods, base }: { methods: PaymentMethod[]; base: string 
         <div key={g} className="card" style={{ paddingBlock: 12 }}>
           <div className="group-title">{GROUP_LABEL[g]}</div>
           <div className="list">
-            {methods.filter((m) => m.group === g).map((m) => LOGIN_TEST_MODE ? (
+            {methods.filter((m) => m.group === g).map((m) => disabled ? (
               <div key={m.id} className="list-row">
                 <span className="method-icon">{short(m)}</span>
                 <span className="main-col"><span className="t">{m.name}</span><br /><span className="s">{m.speed} · {money(m.min)} – {money(m.max)}</span></span>
@@ -52,7 +53,7 @@ const DEPOSIT_METHOD = 'card';
 
 // Injects the external EnterG Pay widget. <script> tags rendered by React never execute,
 // so the script element is created and appended by hand, then removed on unmount.
-function PayWidget() {
+export function PayWidget() {
   const nav = useNavigate();
   const { refreshBalance } = useAuth();
 
@@ -83,13 +84,12 @@ function PayWidget() {
 }
 
 export function Deposit() {
-  const { data, error, reload } = useAsync(() => api.payments.getDepositMethods(), []);
+  const { data, error, reload } = useAsync(() => mockApi.payments.getDepositMethods(), []);
   return (
     <AccountFrame>
       <h1 className="page-title">Deposit</h1>
-      <p className="hint">{LOGIN_TEST_MODE ? 'Sample payment methods loaded from the gateway. Deposits are not enabled in mixed mode.' : 'Pick how you want to pay. Deposits count towards your deposit limit.'}</p>
-      {!LOGIN_TEST_MODE && <PayWidget />}
-      {error ? <p role="alert">{error} <button className="btn btn-ghost" onClick={reload}>Retry</button></p> : data ? <MethodList methods={data} base="/account/deposit" /> : <div className="skeleton" style={{ height: 300 }} />}
+      <p className="hint">Demo deposits use sample data. Pick how you want to pay.</p>
+      {error ? <p role="alert">{error} <button className="btn btn-ghost" onClick={reload}>Retry</button></p> : data ? <MethodList methods={data} base="/account/deposit" disabled={false} /> : <div className="skeleton" style={{ height: 300 }} />}
     </AccountFrame>
   );
 }
@@ -140,8 +140,8 @@ export function PaymentForm({ kind }: { kind: 'deposit' | 'withdraw' }) {
   const nav = useNavigate();
   const location = useLocation();
   const { refreshBalance, balance } = useAuth();
-  const methods = useAsync(() => (kind === 'deposit' ? api.payments.getDepositMethods() : api.payments.getWithdrawalMethods()), [kind]);
-  const limits = useAsync(() => api.account.getLimits(), []);
+  const methods = useAsync(() => (kind === 'deposit' ? mockApi.payments.getDepositMethods() : api.payments.getWithdrawalMethods()), [kind]);
+  const limits = useAsync(() => (kind === 'deposit' ? mockApi : api).account.getLimits(), [kind]);
   const m = methods.data?.find((x) => x.id === methodId);
   const [amount, setAmount] = useState(0);
   const [busy, setBusy] = useState(false);
@@ -155,9 +155,9 @@ export function PaymentForm({ kind }: { kind: 'deposit' | 'withdraw' }) {
     setBusy(true);
     setError(undefined);
     try {
-      const r = kind === 'deposit' ? await api.payments.deposit(m.id, amount) : await api.payments.withdraw(m.id, amount);
+      const r = kind === 'deposit' ? await mockApi.payments.deposit(m.id, amount) : await api.payments.withdraw(m.id, amount);
       setResult(r);
-      refreshBalance();
+      if (kind !== 'deposit' || !LOGIN_TEST_MODE) void refreshBalance();
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -165,7 +165,7 @@ export function PaymentForm({ kind }: { kind: 'deposit' | 'withdraw' }) {
     }
   };
 
-  if (LOGIN_TEST_MODE) return <AccountFrame><p>Payments are not connected in mixed mode.</p><Link to={base}>Back to methods</Link></AccountFrame>;
+  if (LOGIN_TEST_MODE && kind !== 'deposit') return <AccountFrame><p>Payments are not connected in mixed mode.</p><Link to={base}>Back to methods</Link></AccountFrame>;
   if (!m) return <AccountFrame><div className="skeleton" style={{ height: 320 }} /></AccountFrame>;
   const valid = amount >= m.min && amount <= m.max && (kind === 'deposit' || amount <= (balance?.withdrawable ?? 0));
 

@@ -1,3 +1,4 @@
+import { Deposit2 } from '@/pages/account/Deposit2';
 import { Bets2 } from '@/pages/account/Bets2';
 import { BetsPro } from '@/pages/account/BetsPro';
 import { Deposits } from '@/pages/account/Deposits';
@@ -59,6 +60,7 @@ export default function App() {
                 <Route path="/live-casino" element={<LiveCasino />} />
                 <Route path="/account" element={<Overview />} />
                 <Route path="/account/deposit" element={<Deposit />} />
+                <Route path="/account/deposit2" element={<Deposit2 />} />
                 <Route path="/account/deposit/:methodId" element={<PaymentForm kind="deposit" />} />
                 <Route path="/account/withdraw" element={<Withdraw />} />
                 <Route path="/account/withdraw/:methodId" element={<PaymentForm kind="withdraw" />} />

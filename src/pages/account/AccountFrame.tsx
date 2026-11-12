@@ -9,7 +9,7 @@ import { useAuth } from '@/state/AuthContext';
 
 const NAV: { group: string; items: { to: string; label: string; icon: string; end?: boolean }[] }[] = [
   { group: '', items: [{ to: '/account', label: 'Overview', icon: 'home', end: true }] },
-  { group: 'Payments', items: [{ to: '/account/deposit', label: 'Deposit', icon: 'wallet' }, { to: '/account/withdraw', label: 'Withdraw', icon: 'transfer' }] },
+  { group: 'Payments', items: [{ to: '/account/deposit', label: 'Deposit', icon: 'wallet' }, { to: '/account/deposit2', label: 'Deposit2', icon: 'wallet' }, { to: '/account/withdraw', label: 'Withdraw', icon: 'transfer' }] },
   { group: 'History', items: [{ to: '/account/bets', label: 'Bets', icon: 'bets' }, { to: '/account/bets2', label: 'Bets2', icon: 'bets' }, { to: '/account/bets-pro', label: 'Bets Pro/VIP', icon: 'bets' }, { to: '/account/transactions', label: 'Transactions', icon: 'history' }, { to: '/account/deposits', label: 'Deposits', icon: 'history' }] },
   { group: 'Profile', items: [{ to: '/account/profile', label: 'Personal details', icon: 'user' }, { to: '/account/protection', label: 'Limits and safer play', icon: 'shield' }] },
 ];
